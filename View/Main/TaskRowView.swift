@@ -13,7 +13,7 @@ struct TaskRowView: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text(task.title)
+                Text(task.name)
                     .font(.headline)
                     .foregroundColor(.primary)
 

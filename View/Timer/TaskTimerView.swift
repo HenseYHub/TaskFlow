@@ -16,7 +16,7 @@ struct TaskTimerView: View {
             AppColors.background.ignoresSafeArea()
 
             VStack(spacing: 32) {
-                Text(task.title)
+                Text(task.name)
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
@@ -29,40 +29,50 @@ struct TaskTimerView: View {
                 VStack(spacing: 12) {
                     if timerVM.remainingSeconds > 0 {
                         if !timerVM.hasStarted {
-                            Button("Старт") {
+                            Button(action: {
                                 timerVM.start()
                                 NotificationManager.instance.scheduleNotification(
                                     title: "Задача завершена!",
-                                    subtitle: "\"\(task.title)\" завершена 🎉",
+                                    subtitle: "\"\(task.name)\" завершена 🎉",
                                     date: Date().addingTimeInterval(Double(timerVM.remainingSeconds))
                                 )
+                            }) {
+                                Text("Старт")
                             }
                             .buttonStyle(.borderedProminent)
 
-                            Button("Изменить время") {
+                            Button(action: {
                                 tempDuration = timerVM.remainingSeconds / 60
                                 showTimePicker.toggle()
+                            }) {
+                                Text("Изменить время")
                             }
                             .buttonStyle(.bordered)
                         } else if timerVM.isRunning {
-                            Button("Пауза") {
+                            Button(action: {
                                 timerVM.pause()
+                            }) {
+                                Text("Пауза")
                             }
                             .buttonStyle(.bordered)
                         } else {
-                            Button("Старт") {
+                            Button(action: {
                                 timerVM.start()
+                            }) {
+                                Text("Старт")
                             }
                             .buttonStyle(.borderedProminent)
                         }
                     }
 
-                    Button("Завершить") {
+                    Button(action: {
                         timerVM.stop()
                         if let index = viewModel.tasks.firstIndex(where: { $0.id == task.id }) {
                             viewModel.tasks[index].isCompleted = true
                         }
                         dismiss()
+                    }) {
+                        Text("Завершить")
                     }
                     .buttonStyle(.bordered)
                     .tint(.red)
@@ -94,10 +104,12 @@ struct TaskTimerView: View {
                 .labelsHidden()
                 .pickerStyle(.wheel)
 
-                Button("Применить") {
+                Button(action: {
                     timerVM.remainingSeconds = tempDuration * 60
                     timerVM.totalSeconds = tempDuration * 60
                     showTimePicker = false
+                }) {
+                    Text("Применить")
                 }
                 .padding()
             }

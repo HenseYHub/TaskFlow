@@ -1,15 +1,8 @@
-//
-//  TaskModel.swift
-//  TaskFlow
-//
-//  Created by Pavlo on 22.04.2025.
-//
-
 import Foundation
 
 struct TaskModel: Identifiable, Hashable {
     let id: UUID
-    var title: String
+    var name: String
     var durationInMinutes: Int
     var date: Date?
     var isCompleted: Bool
@@ -17,18 +10,22 @@ struct TaskModel: Identifiable, Hashable {
     var category: String
     var remindMe: Bool
     var comment: String?
+    var project: String
+
     var durationText: String {
-        return "\(durationInMinutes) мин"
+        return "\(durationInMinutes) хв"
     }
 
+    // 🧩 пример задачи с проектом
     static let sample = TaskModel(
         id: UUID(),
-        title: "Учёба (Swift)",
+        name: "Учёба (Swift)",
         durationInMinutes: 25,
         date: Date(),
         isCompleted: false,
-        category: "Study",        
-        remindMe: false
+        category: "Study",
+        remindMe: false,
+        comment: "Пишу таск трекер",
+        project: "Game Design"
     )
-
 }

@@ -30,7 +30,7 @@ struct CompletedTasksView: View {
                         ForEach(completedTasks) { task in
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(task.title)
+                                    Text(task.name)
                                         .font(.headline)
                                         .foregroundColor(.white)
                                     Text("\(task.durationInMinutes) хв")

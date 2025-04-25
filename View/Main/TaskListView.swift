@@ -3,10 +3,13 @@ import SwiftUI
 struct TaskListView: View {
     @EnvironmentObject var viewModel: TaskViewModel
     @EnvironmentObject var userProfile: UserProfileModel
+    @EnvironmentObject var taskViewModel: TaskViewModel
+    @EnvironmentObject var projectViewModel: ProjectViewModel
+
     @State private var selectedProjectIndex: Int = 0
+    @State private var showProjectInfo: Bool = false
 
     var body: some View {
-        NavigationStack {
             VStack(spacing: 0) {
                 // MARK: - Верхняя карточка с фоном и приветом
                 ZStack(alignment: .topLeading) {
@@ -70,9 +73,16 @@ struct TaskListView: View {
 
                         Spacer()
 
-                        Button("All Task") {
-                            // переход ко всем задачам
+                        NavigationLink(destination:
+                            AllTaskView()
+                                .environmentObject(taskViewModel)
+                                .environmentObject(projectViewModel)
+                        ) {
+                            Text("All Task")
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
                         }
+
                         .font(.subheadline)
                         .foregroundColor(.gray)
                     }
@@ -84,14 +94,33 @@ struct TaskListView: View {
                             HStack(spacing: 16) {
                                 ForEach(0..<5, id: \ .self) { index in
                                     VStack(alignment: .leading, spacing: 8) {
-                                        Image(systemName: "gamecontroller")
-                                            .font(.title2)
+                                        HStack {
+                                            Image(systemName: "gamecontroller")
+                                                .font(.title2)
+
+                                            Spacer()
+
+                                            Button(action: {
+                                                showProjectInfo = true
+                                            }) {
+                                                Image(systemName: "info.circle")
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
 
                                         Text("Game Design")
                                             .font(.headline)
 
                                         Text("Create menu in dashboard & Make user flow")
                                             .font(.subheadline)
+                                            .foregroundColor(.gray)
+
+                                        Text("25 Apr 2025")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+
+                                        Text("09:00 – 12:00")
+                                            .font(.caption2)
                                             .foregroundColor(.gray)
 
                                         if index == selectedProjectIndex {
@@ -107,7 +136,7 @@ struct TaskListView: View {
                                     }
                                     .padding()
                                     .frame(width: index == selectedProjectIndex ? 200 : 160,
-                                           height: index == selectedProjectIndex ? 180 : 160)
+                                           height: index == selectedProjectIndex ? 200 : 160)
                                     .background(index == selectedProjectIndex ? Color.white.opacity(0.1) : Color.white.opacity(0.05))
                                     .foregroundColor(.white)
                                     .clipShape(RoundedRectangle(cornerRadius: 24))
@@ -128,12 +157,24 @@ struct TaskListView: View {
                 Spacer()
             }
             .background(AppColors.background.ignoresSafeArea())
+            .sheet(isPresented: $showProjectInfo) {
+                ProjectInfoSheetView(
+                    title: "Game Design",
+                    description: "Create menu in dashboard & Make user flow",
+                    date: Date(),
+                    startTime: Date(),
+                    endTime: Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+                )
+                .presentationDetents([.height(220)])
+                .presentationBackground(.clear)
+            }
         }
     }
-}
+
 
 #Preview {
     TaskListView()
         .environmentObject(TaskViewModel())
         .environmentObject(UserProfileModel())
+        .environmentObject(ProjectViewModel())
 }

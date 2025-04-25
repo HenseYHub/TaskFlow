@@ -4,17 +4,20 @@ struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var showCreateTask = false
 
-    @StateObject var taskViewModel = TaskViewModel()
-    @StateObject var timerViewModel = TimerViewModel(durationInMinutes: 25)
+    // Заменим на @EnvironmentObject
+    @EnvironmentObject var taskViewModel: TaskViewModel
+    @EnvironmentObject var timerViewModel: TimerViewModel
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            // Главная (Список задач)
-            TaskListView()
-                .tabItem {
-                    Label("Home", systemImage: "house")
-                }
-                .tag(0)
+            NavigationStack {
+                TaskListView()
+            }
+            .tabItem {
+                Label("Home", systemImage: "house")
+            }
+            .tag(0)
+
 
             // Таймер (Фокус)
             if let firstTask = taskViewModel.tasks.first(where: { !$0.isCompleted }) {
@@ -51,10 +54,18 @@ struct MainTabView: View {
                 .tag(3)
         }
         .environmentObject(taskViewModel)
+        .environmentObject(timerViewModel)
     }
 }
 
 #Preview {
     MainTabView()
+        .environmentObject(TaskViewModel())
+        .environmentObject(TimerViewModel(durationInMinutes: 25))
+        .environmentObject(UserProfileModel())
+        .environmentObject(ProjectViewModel())
         .environment(\.colorScheme, .dark)
 }
+
+
+

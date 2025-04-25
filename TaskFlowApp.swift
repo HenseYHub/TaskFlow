@@ -2,14 +2,18 @@ import SwiftUI
 
 @main
 struct TaskFlowApp: App {
-    @StateObject private var taskViewModel = TaskViewModel()
-    @StateObject private var userProfile = UserProfileModel()
+    @StateObject var taskViewModel = TaskViewModel()
+    @StateObject var timerViewModel = TimerViewModel(durationInMinutes: 25)
+    @StateObject var userProfile = UserProfileModel()
+    @StateObject var projectViewModel = ProjectViewModel()
 
     var body: some Scene {
         WindowGroup {
             MainTabView()
                 .environmentObject(taskViewModel)
+                .environmentObject(timerViewModel)
                 .environmentObject(userProfile)
+                .environmentObject(projectViewModel)
         }
     }
 }

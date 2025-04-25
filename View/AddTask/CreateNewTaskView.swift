@@ -119,13 +119,15 @@ struct CreateNewTaskView: View {
                     Button(action: {
                         let newTask = TaskModel(
                             id: UUID(),
-                            title: taskName,
+                            name: taskName,
                             durationInMinutes: Int(endTime.timeIntervalSince(startTime) / 60),
                             date: taskDate,
                             isCompleted: false,
                             category: "", // категорий больше нет
                             remindMe: remindMe,
-                            comment: comment
+                            comment: comment,
+                            project: "Game Design"
+
                         )
                         viewModel.addTask(newTask)
                         dismiss()
