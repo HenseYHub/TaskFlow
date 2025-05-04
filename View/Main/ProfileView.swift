@@ -10,126 +10,134 @@ struct ProfileView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            Color.black.ignoresSafeArea()
+            AppColorPalette.background.ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                HStack {
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        Image(systemName: "chevron.left")
+            ScrollView {
+                VStack(spacing: 10) {
+                    // Top bar
+                    HStack {
+                        Button(action: {
+                            dismiss()
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.white.opacity(0.1))
+                                .clipShape(Circle())
+                        }
+
+                        Spacer()
+
+                        Text("Profile")
+                            .font(.title2.bold())
                             .foregroundColor(.white)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(Circle())
+
+                        Spacer()
+
+                        Button(action: {
+                            isEditingProfile.toggle()
+                        }) {
+                            Image(systemName: "pencil")
+                                .foregroundColor(.white)
+                                .padding()
+                                .background(Color.white.opacity(0.1))
+                                .clipShape(Circle())
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    // Avatar
+                    if let image = profileImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 120, height: 120)
+                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white, lineWidth: 2))
+                            .onTapGesture {
+                                isShowingImagePicker = true
+                            }
+                    } else {
+                        Image(systemName: "person.crop.square.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .foregroundColor(.gray)
+                            .frame(width: 120, height: 120)
+                            .background(Color.gray.opacity(0.2))
+                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.5), lineWidth: 2))
+                            .onTapGesture {
+                                isShowingImagePicker = true
+                            }
                     }
 
-                    Spacer()
-
-                    Text("Profile")
-                        .font(.title2.bold())
+                    // Name & profession
+                    Text(userProfile.fullName)
+                        .font(.title.bold())
                         .foregroundColor(.white)
 
-                    Spacer()
-
-                    Button(action: {
-                        isEditingProfile.toggle()
-                    }) {
-                        Image(systemName: "pencil")
-                            .foregroundColor(.white)
-                            .padding()
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(Circle())
-                    }
-                }
-                .padding(.horizontal)
-
-                // Фото профиля
-                if let image = profileImage {
-                    Image(uiImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 120, height: 120)
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
-                        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white, lineWidth: 2))
-                        .onTapGesture {
-                            isShowingImagePicker = true
-                        }
-                } else {
-                    Image(systemName: "person.crop.square.fill")
-                        .resizable()
-                        .scaledToFit()
+                    Text(userProfile.profession)
                         .foregroundColor(.gray)
-                        .frame(width: 120, height: 120)
-                        .background(Color.gray.opacity(0.2))
-                        .clipShape(RoundedRectangle(cornerRadius: 24))
-                        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.5), lineWidth: 2))
-                        .onTapGesture {
-                            isShowingImagePicker = true
+
+                    // Stats
+                    HStack(spacing: 10) {
+                        VStack {
+                            Text("257")
+                                .font(.title2.bold())
+                                .foregroundColor(.red)
+                            Text("Complete Task")
+                                .font(.caption)
+                                .foregroundColor(.white)
                         }
+                        .frame(width: 120, height: 60)
+                        .background(Color.red.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+
+                        VStack {
+                            Text("356")
+                                .font(.title2.bold())
+                                .foregroundColor(.blue)
+                            Text("Pending Task")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        }
+                        .frame(width: 120, height: 60)
+                        .background(Color.blue.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+
+                    // Options
+                    VStack(spacing: 10) {
+                        Button(action: {
+                            selectedRow = "MyAccount"
+                        }) {
+                            ProfileRow(icon: "person.circle", title: "My Account")
+                        }
+
+                        Button(action: {
+                            selectedRow = "ChangePassword"
+                        }) {
+                            ProfileRow(icon: "lock.circle", title: "Change Password")
+                        }
+
+                        Button(action: {
+                            selectedRow = "Project"
+                        }) {
+                            ProfileRow(icon: "doc.text", title: "Project You Are In")
+                        }
+
+                        Button(action: {
+                            // TODO: Handle log out
+                        }) {
+                            ProfileRow(icon: "arrow.left.circle", title: "Log Out", color: .red)
+                        }
+
+                    }
+                    .padding(.top)
+                    .padding(.bottom, 80) // <- чтобы не уезжала под TabBar
                 }
-
-                Text(userProfile.fullName)
-                    .font(.title.bold())
-                    .foregroundColor(.white)
-
-                Text(userProfile.profession)
-                    .foregroundColor(.gray)
-
-                HStack(spacing: 20) {
-                    VStack {
-                        Text("257")
-                            .font(.title2.bold())
-                            .foregroundColor(.red)
-                        Text("Complete Task")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                    .frame(width: 120, height: 60)
-                    .background(Color.red.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-
-                    VStack {
-                        Text("356")
-                            .font(.title2.bold())
-                            .foregroundColor(.blue)
-                        Text("Pending Task")
-                            .font(.caption)
-                            .foregroundColor(.white)
-                    }
-                    .frame(width: 120, height: 60)
-                    .background(Color.blue.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                }
-
-                VStack(spacing: 10) {
-                    Button(action: {
-                        selectedRow = "MyAccount"
-                    }) {
-                        ProfileRow(icon: "person.circle", title: "My Account")
-                    }
-
-                    Button(action: {
-                        selectedRow = "ChangePassword"
-                    }) {
-                        ProfileRow(icon: "lock.circle", title: "Change Password")
-                    }
-
-                    Button(action: {
-                        selectedRow = "Project"
-                    }) {
-                        ProfileRow(icon: "doc.text", title: "Project You Are In")
-                    }
-
-                    Button(action: {
-                        // Логика выхода из аккаунта
-                    }) {
-                        ProfileRow(icon: "arrow.left.circle", title: "Log Out", color: .red)
-                    }
-                }
-                .padding(.top)
+                .padding()
             }
-            .padding()
         }
         .sheet(isPresented: $isEditingProfile) {
             EditProfileView(userProfile: userProfile)
@@ -163,6 +171,7 @@ struct ProfileRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
+
 
 #Preview {
     ProfileView()

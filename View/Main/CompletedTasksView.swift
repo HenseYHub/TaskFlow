@@ -9,7 +9,7 @@ struct CompletedTasksView: View {
 
     var body: some View {
         ZStack {
-            AppColors.background.ignoresSafeArea() // Тёмный фон
+            AppColorPalette.background.ignoresSafeArea() // Тёмный фон
 
             VStack(alignment: .leading, spacing: 16) {
                 Text("Завершённые задачи")

@@ -14,7 +14,7 @@ class TaskViewModel: ObservableObject {
             category: "Study",
             remindMe: true,
             comment: "Прохожу SwiftUI",
-            project: "Game Design" // ✅ добавили проект
+            project: "Game Design"
         ),
         TaskModel(
             id: UUID(),
@@ -25,7 +25,7 @@ class TaskViewModel: ObservableObject {
             category: "Life",
             remindMe: false,
             comment: "Гулял по парку",
-            project: "Game Design" // ✅ добавили проект
+            project: "Game Design"
         )
     ]
     
@@ -35,5 +35,11 @@ class TaskViewModel: ObservableObject {
     
     func removeTask(_ task: TaskModel) {
         tasks.removeAll { $0.id == task.id }
+    }
+
+    func toggleTaskCompletion(task: TaskModel) {
+        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks[index].isCompleted.toggle()
+        }
     }
 }

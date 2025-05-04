@@ -9,7 +9,7 @@ struct AllTaskView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                ForEach(taskViewModel.tasks.filter { $0.project == projectViewModel.selectedProject?.name }) { task in
+                ForEach(taskViewModel.tasks.filter { $0.project == projectViewModel.selectedProject?.title }) { task in
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text(task.name)
@@ -48,7 +48,7 @@ struct AllTaskView: View {
             }
             .padding()
         }
-        .background(AppColors.background.ignoresSafeArea())
+        .background(AppColorPalette.background.ignoresSafeArea())
         .sheet(item: $selectedTask) { task in
             ProjectInfoSheetView(
                 title: task.name,

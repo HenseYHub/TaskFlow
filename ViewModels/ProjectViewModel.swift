@@ -12,8 +12,9 @@ class ProjectViewModel: ObservableObject {
 
     @Published var projects: [ProjectModel] = [
         ProjectModel(
-            name: "Game Design",
+            title: "Game Design",
             description: "Create menu in dashboard & Make user flow",
+            comment: "Main project screen",
             date: Date(),
             startTime: Date(),
             endTime: Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
@@ -24,5 +25,9 @@ class ProjectViewModel: ObservableObject {
         guard selectedProjectIndex < projects.count else { return nil }
         return projects[selectedProjectIndex]
     }
-}
 
+    func updateProject(at index: Int, with updatedProject: ProjectModel) {
+        guard projects.indices.contains(index) else { return }
+        projects[index] = updatedProject
+    }
+}

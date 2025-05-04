@@ -13,7 +13,7 @@ struct TaskTimerView: View {
 
     var body: some View {
         ZStack {
-            AppColors.background.ignoresSafeArea()
+            AppColorPalette.background.ignoresSafeArea()
 
             VStack(spacing: 32) {
                 Text(task.name)
@@ -114,7 +114,7 @@ struct TaskTimerView: View {
                 .padding()
             }
             .padding()
-            .background(AppColors.background)
+            .background(AppColorPalette.background)
         }
     }
 
