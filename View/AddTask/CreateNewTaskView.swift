@@ -90,7 +90,7 @@ struct CreateNewTaskView: View {
                             .foregroundColor(.gray)
 
                         HStack {
-                            DatePicker("", selection: $taskDate, displayedComponents: .date)
+                            DatePicker("", selection: $taskDate, in: Date()..., displayedComponents: .date)
                                 .labelsHidden()
                                 .colorMultiply(.white)
                                 .preferredColorScheme(.dark)
@@ -115,7 +115,7 @@ struct CreateNewTaskView: View {
                             Text("-")
                                 .foregroundColor(.white)
 
-                            DatePicker("", selection: $endTime, displayedComponents: .hourAndMinute)
+                            DatePicker("", selection: $endTime, in: startTime...(Calendar.current.date(bySettingHour: 23, minute: 59, second: 0, of: taskDate) ?? Date()), displayedComponents: .hourAndMinute)
                                 .labelsHidden()
                                 .colorMultiply(.white)
                                 .preferredColorScheme(.dark)
@@ -185,7 +185,9 @@ struct CreateNewTaskView: View {
                                     category: "",
                                     remindMe: remindMe,
                                     comment: comment,
-                                    project: selectedType ?? ""
+                                    project: selectedType ?? "",
+                                    startTime: startTime,
+                                    endTime: endTime
                                 )
                                 viewModel.addTask(newTask)
                             }
@@ -222,8 +224,21 @@ struct CreateNewTaskView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                     .modifier(ShakeEffect(shakes: 1, animatableData: shakeTrigger))
-                    .padding(.horizontal)                }
+                    .padding(.horizontal)
+                }
                 .padding(.top, 20)
+            }
+        }
+        .onChange(of: startTime) {
+            let calendar = Calendar.current
+            let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 0, of: taskDate) ?? Date()
+            let suggestedEndTime = calendar.date(byAdding: .hour, value: 1, to: startTime) ?? startTime
+            endTime = min(suggestedEndTime, endOfDay)
+        }
+        .onChange(of: taskDate) {
+            let today = Calendar.current.startOfDay(for: Date())
+            if taskDate < today {
+                taskDate = today
             }
         }
     }

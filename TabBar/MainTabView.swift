@@ -36,22 +36,12 @@ struct MainTabView: View {
                     }
                     .tag(0)
 
-                    Group {
-                        if let firstTask = taskViewModel.tasks.first(where: { !$0.isCompleted }) {
-                            TaskTimerView(
-                                timerVM: TimerViewModel(durationInMinutes: firstTask.durationInMinutes),
-                                task: firstTask,
-                                viewModel: taskViewModel
-                            )
-                        } else {
-                            Text("Нет активной задачи")
-                                .foregroundColor(.gray)
+                    DailyTimelineView()
+                        .environmentObject(taskViewModel)
+                        .tabItem {
+                            Label("Focus", systemImage: "timer")
                         }
-                    }
-                    .tabItem {
-                        Label("Focus", systemImage: "timer")
-                    }
-                    .tag(1)
+                        .tag(1)
 
                     // Пустой таб для размещения кнопки "+"
                     Color.clear

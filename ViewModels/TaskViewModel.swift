@@ -19,4 +19,37 @@ class TaskViewModel: ObservableObject {
             tasks[index].isCompleted.toggle()
         }
     }
+    
+    func addTask(
+        name: String,
+        durationInMinutes: Int,
+        date: Date?,
+        isCompleted: Bool = false,
+        note: String? = nil,
+        category: String = "General",
+        remindMe: Bool,
+        comment: String?,
+        project: String,
+        startTime: Date?,
+        endTime: Date?
+    ) {
+        let newTask = TaskModel(
+            id: UUID(),
+            name: name,
+            durationInMinutes: durationInMinutes,
+            date: date,
+            isCompleted: isCompleted,
+            note: note,
+            category: category,
+            remindMe: remindMe,
+            comment: comment,
+            project: project,
+            startTime: startTime,
+            endTime: endTime
+        )
+        
+        tasks.append(newTask)
+    }
+
 }
+

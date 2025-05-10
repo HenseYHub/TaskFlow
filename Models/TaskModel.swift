@@ -11,6 +11,9 @@ struct TaskModel: Identifiable, Hashable {
     var remindMe: Bool
     var comment: String?
     var project: String
+    var startTime: Date?
+    var endTime: Date?
+
 
     var durationText: String {
         return "\(durationInMinutes) хв"
