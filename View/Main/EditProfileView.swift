@@ -3,76 +3,77 @@ import SwiftUI
 struct EditProfileView: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var userProfile: UserProfileModel
-    @State private var showPassword: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 20) {
+            // Заголовок
             Text("Edit Profile")
-                .font(.title)
-                .bold()
-                .padding(.bottom, 8)
+                .font(.title2.bold())
+                .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .center)
 
+            // Поля
             Group {
-                Text("Full Name")
-                    .foregroundColor(.gray)
-                TextField("Enter full name", text: $userProfile.fullName)
-                    .textFieldStyle(.plain)
-                    .padding(.vertical, 8)
-                Divider()
-
-                Text("Profession")
-                    .foregroundColor(.gray)
-                TextField("Enter profession", text: $userProfile.profession)
-                    .textFieldStyle(.plain)
-                    .padding(.vertical, 8)
-                Divider()
-
-                Text("Nickname")
-                    .foregroundColor(.gray)
-                TextField("Enter nickname", text: $userProfile.nickname)
-                    .textFieldStyle(.plain)
-                    .padding(.vertical, 8)
-                Divider()
-
-                Text("E-mail")
-                    .foregroundColor(.gray)
-                TextField("Enter e-mail", text: $userProfile.email)
-                    .textFieldStyle(.plain)
-                    .padding(.vertical, 8)
-                    .keyboardType(.emailAddress)
-                Divider()
+                ProfileInputField(title: "Full Name", text: $userProfile.fullName)
+                ProfileInputField(title: "Profession", text: $userProfile.profession)
+                ProfileInputField(title: "Nickname", text: $userProfile.nickname)
+                ProfileInputField(title: "E-mail", text: $userProfile.email, keyboardType: .emailAddress)
             }
 
             Spacer()
 
-            HStack {
+            // Кнопки
+            HStack(spacing: 16) {
                 Button("Cancel") {
                     dismiss()
                 }
+                .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.gray.opacity(0.2))
-                .cornerRadius(10)
+                .background(Color.white.opacity(0.05))
+                .foregroundColor(.white)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
 
                 Button("Save") {
                     dismiss()
                 }
+                .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.accentColor)
+                .background(Color.blue)
                 .foregroundColor(.white)
-                .cornerRadius(10)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
         }
         .padding()
-        .background(Color.black.ignoresSafeArea())
-        .foregroundColor(.white)
+        .background(AppColorPalette.background.ignoresSafeArea())
+    }
+}
+
+// MARK: - Custom Input Field
+struct ProfileInputField: View {
+    var title: String
+    @Binding var text: String
+    var keyboardType: UIKeyboardType = .default
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .foregroundColor(.gray)
+                .font(.caption)
+
+            TextField("Enter \(title.lowercased())", text: $text)
+                .keyboardType(keyboardType)
+                .foregroundColor(.white)
+                .padding(12)
+                .background(Color.white.opacity(0.05))
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
     }
 }
 
 #Preview {
     EditProfileView(userProfile: UserProfileModel())
+        .environmentObject(UserProfileModel())
         .preferredColorScheme(.dark)
 }
-

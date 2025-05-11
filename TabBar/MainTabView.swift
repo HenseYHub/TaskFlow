@@ -43,6 +43,7 @@ struct MainTabView: View {
                         }
                         .tag(1)
 
+
                     // Пустой таб для размещения кнопки "+"
                     Color.clear
                         .tabItem {

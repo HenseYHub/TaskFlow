@@ -6,8 +6,10 @@ struct ProfileView: View {
     @State private var profileImage: UIImage? = nil
     @State private var isShowingImagePicker = false
     @State private var isEditingProfile = false
-    @State private var selectedRow: String? = nil
+    @State private var isShowingPasswordSheet = false
+    @State private var showChangePasswordSheet = false
 
+        
     var body: some View {
         ZStack(alignment: .top) {
             AppColorPalette.background.ignoresSafeArea()
@@ -16,16 +18,6 @@ struct ProfileView: View {
                 VStack(spacing: 10) {
                     // Top bar
                     HStack {
-                        Button(action: {
-                            dismiss()
-                        }) {
-                            Image(systemName: "chevron.left")
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.white.opacity(0.1))
-                                .clipShape(Circle())
-                        }
-
                         Spacer()
 
                         Text("Profile")
@@ -33,16 +25,6 @@ struct ProfileView: View {
                             .foregroundColor(.white)
 
                         Spacer()
-
-                        Button(action: {
-                            isEditingProfile.toggle()
-                        }) {
-                            Image(systemName: "pencil")
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.white.opacity(0.1))
-                                .clipShape(Circle())
-                        }
                     }
                     .padding(.horizontal)
 
@@ -82,66 +64,74 @@ struct ProfileView: View {
                     // Stats
                     HStack(spacing: 10) {
                         VStack {
-                            Text("257")
+                            Text("0") // Заменить позже
                                 .font(.title2.bold())
-                                .foregroundColor(.red)
-                            Text("Complete Task")
+                                .foregroundColor(.blue)
+                            Text("Task Completed")
                                 .font(.caption)
                                 .foregroundColor(.white)
                         }
-                        .frame(width: 120, height: 60)
-                        .background(Color.red.opacity(0.1))
+                        .frame(width: 140, height: 60)
+                        .background(Color.gray.opacity(0.4))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
 
                         VStack {
-                            Text("356")
+                            Text("0") // Заменить позже
                                 .font(.title2.bold())
                                 .foregroundColor(.blue)
-                            Text("Pending Task")
+                            Text("Project Completed")
                                 .font(.caption)
                                 .foregroundColor(.white)
                         }
-                        .frame(width: 120, height: 60)
-                        .background(Color.blue.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .frame(width: 140, height: 60)
+                        .background(Color.gray.opacity(0.4))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
 
                     // Options
                     VStack(spacing: 10) {
-                        Button(action: {
-                            selectedRow = "MyAccount"
-                        }) {
+                        Button {
+                            isEditingProfile = true
+                        } label: {
                             ProfileRow(icon: "person.circle", title: "My Account")
                         }
 
+
                         Button(action: {
-                            selectedRow = "ChangePassword"
+                            showChangePasswordSheet = true
                         }) {
                             ProfileRow(icon: "lock.circle", title: "Change Password")
                         }
 
-                        Button(action: {
-                            selectedRow = "Project"
-                        }) {
-                            ProfileRow(icon: "doc.text", title: "Project You Are In")
+                        Button {
+                            // TODO: Projects
+                        } label: {
+                            ProfileRow(icon: "doc.text", title: "Projects")
                         }
 
-                        Button(action: {
-                            // TODO: Handle log out
-                        }) {
+                        Button {
+                            // TODO: Log out
+                        } label: {
                             ProfileRow(icon: "arrow.left.circle", title: "Log Out", color: .red)
                         }
-
                     }
                     .padding(.top)
-                    .padding(.bottom, 80) // <- чтобы не уезжала под TabBar
+                    .padding(.bottom, 80)
                 }
                 .padding()
             }
         }
-        .sheet(isPresented: $isEditingProfile) {
+        .fullScreenCover(isPresented: $isEditingProfile) {
             EditProfileView(userProfile: userProfile)
+                .background(AppColorPalette.background.ignoresSafeArea())
         }
+        .sheet(isPresented: $showChangePasswordSheet) {
+            ChangePasswordSheet()
+                .presentationDetents([.height(380)]) // можно регулировать
+                .presentationDragIndicator(.visible)
+                .presentationDragIndicator(.hidden)
+        }
+
     }
 }
 
@@ -171,7 +161,6 @@ struct ProfileRow: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
-
 
 #Preview {
     ProfileView()
