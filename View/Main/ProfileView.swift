@@ -2,12 +2,15 @@ import SwiftUI
 
 struct ProfileView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var taskVM: TaskViewModel
     @StateObject private var userProfile = UserProfileModel()
     @State private var profileImage: UIImage? = nil
     @State private var isShowingImagePicker = false
     @State private var isEditingProfile = false
     @State private var isShowingPasswordSheet = false
     @State private var showChangePasswordSheet = false
+    @AppStorage("isLoggenIn") var isLoggedIn: Bool = true
+    @State private var showProgressHeatmap = false
 
         
     var body: some View {
@@ -104,13 +107,17 @@ struct ProfileView: View {
                         }
 
                         Button {
-                            // TODO: Projects
+                            showProgressHeatmap = true
                         } label: {
-                            ProfileRow(icon: "doc.text", title: "Projects")
+                            ProfileRow(icon: "chart.bar", title: "My Progress")
                         }
+                        .sheet(isPresented: $showProgressHeatmap, content: {
+                            ProgressHeatmapView()
+                                .environmentObject(taskVM)
+                        })
 
                         Button {
-                            // TODO: Log out
+                            isLoggedIn = false
                         } label: {
                             ProfileRow(icon: "arrow.left.circle", title: "Log Out", color: .red)
                         }
@@ -164,4 +171,5 @@ struct ProfileRow: View {
 
 #Preview {
     ProfileView()
+        .environmentObject(TaskViewModel())
 }

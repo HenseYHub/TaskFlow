@@ -15,7 +15,7 @@ struct EditProfileView: View {
             // Поля
             Group {
                 ProfileInputField(title: "Full Name", text: $userProfile.fullName)
-                ProfileInputField(title: "Profession", text: $userProfile.profession)
+                ProfileInputField(title: "Your Dream Profession", text: $userProfile.profession)
                 ProfileInputField(title: "Nickname", text: $userProfile.nickname)
                 ProfileInputField(title: "E-mail", text: $userProfile.email, keyboardType: .emailAddress)
             }
