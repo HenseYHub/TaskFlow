@@ -111,10 +111,11 @@ struct ProfileView: View {
                         } label: {
                             ProfileRow(icon: "chart.bar", title: "My Progress")
                         }
-                        .sheet(isPresented: $showProgressHeatmap, content: {
+                        .fullScreenCover(isPresented: $showProgressHeatmap) {
                             ProgressHeatmapView()
                                 .environmentObject(taskVM)
-                        })
+                        }
+
 
                         Button {
                             isLoggedIn = false

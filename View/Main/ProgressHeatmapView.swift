@@ -3,78 +3,79 @@ import Charts
 
 struct ProgressHeatmapView: View {
     @EnvironmentObject var taskVM: TaskViewModel
+    @Environment(\.dismiss) private var dismiss
 
-    private let columns = 53
-    private let rows = 7
-    private let cellSize: CGFloat = 14
-    private let spacing: CGFloat = 4
+    // MARK: - Circle progress
+
+    private var monthStartDate: Date {
+        let calendar = Calendar.current
+        return calendar.date(from: calendar.dateComponents([.year, .month], from: Date())) ?? Date()
+    }
+
+    private var completedTasksThisMonth: Int {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: monthStartDate)
+        return taskVM.tasks.filter { task in
+            task.isCompleted && task.date != nil && calendar.isDate(task.date!, inSameDayAs: start) || (task.date != nil && task.date! >= start)
+        }.count
+    }
+
+    private var totalTasksThisMonth: Int {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: monthStartDate)
+        return taskVM.tasks.filter { task in
+            task.date != nil && task.date! >= start
+        }.count
+    }
+
+    @State private var animatedProgress: CGFloat = 0
+
+    private var progress: CGFloat {
+        guard totalTasksThisMonth > 0 else { return 0 }
+        return CGFloat(completedTasksThisMonth) / CGFloat(totalTasksThisMonth)
+    }
+
+    private let circleSize: CGFloat = 160
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("My Progress")
-                .font(.title.bold())
-                .foregroundColor(.white)
-                .padding(.horizontal)
+        VStack(spacing: 32) {
+            // MARK: Circle progress with count
+            ZStack {
+                Circle()
+                    .stroke(Color.gray.opacity(0.2), lineWidth: 16)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: 6) {
-                    // Day labels: Mon, Wed, Fri
-                    VStack(spacing: spacing) {
-                        ForEach(0..<rows, id: \.self) { row in
-                            if row % 2 == 0 {
-                                Text(weekdayLabel(for: row))
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
-                                    .frame(height: cellSize)
-                            } else {
-                                Spacer().frame(height: cellSize)
-                            }
-                        }
-                    }
+                Circle()
+                    .trim(from: 0, to: animatedProgress)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.red, Color.orange]),
+                            center: .center,
+                            startAngle: .degrees(0),
+                            endAngle: .degrees(360)
+                        ),
+                        style: StrokeStyle(lineWidth: 16, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
 
-                    // Month Labels + Grid
-                    VStack(alignment: .leading, spacing: 4) {
-                        // Month labels
-                        HStack(spacing: spacing) {
-                            ForEach(0..<columns, id: \.self) { col in
-                                let date = getDate(forColumn: col, row: 0)
-                                if Calendar.current.component(.weekday, from: date) == 2 {
-                                    Text(monthLabel(for: date))
-                                        .font(.caption2)
-                                        .foregroundColor(.gray)
-                                        .frame(width: cellSize * 2, alignment: .leading)
-                                } else {
-                                    Spacer().frame(width: cellSize)
-                                }
-                            }
-                        }
+                VStack(spacing: 6) {
+                    Text("\(completedTasksThisMonth)")
+                        .font(.system(size: 48, weight: .bold))
+                        .foregroundColor(.white)
 
-                        // Grid
-                        HStack(spacing: spacing) {
-                            ForEach(0..<columns, id: \.self) { column in
-                                VStack(spacing: spacing) {
-                                    ForEach(0..<rows, id: \.self) { row in
-                                        let date = getDate(forColumn: column, row: row)
-                                        let count = completedTaskCount(for: date)
-                                        Rectangle()
-                                            .fill(color(for: count))
-                                            .frame(width: cellSize, height: cellSize)
-                                            .cornerRadius(3)
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 3)
-                                                    .stroke(Color.white.opacity(0.03), lineWidth: 0.3)
-                                            )
-                                            .accessibilityLabel("\(count) tasks on \(formattedDate(date))")
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    Text("of \(totalTasksThisMonth)")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
                 }
-                .padding(.horizontal)
+            }
+            .frame(width: circleSize, height: circleSize)
+            .padding(.top, 32)
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.5)) {
+                    animatedProgress = progress
+                }
             }
 
-            // Legend
+            // MARK: Legend under circle
             HStack(spacing: 6) {
                 Text("Less")
                     .font(.caption2)
@@ -83,7 +84,7 @@ struct ProgressHeatmapView: View {
                 ForEach([0, 1, 2, 3, 4], id: \.self) { i in
                     Rectangle()
                         .fill(color(for: i))
-                        .frame(width: cellSize, height: cellSize)
+                        .frame(width: 14, height: 14)
                         .cornerRadius(2)
                 }
 
@@ -92,9 +93,8 @@ struct ProgressHeatmapView: View {
                     .foregroundColor(.gray)
             }
             .padding(.horizontal)
-            .padding(.top, 8)
 
-            // Weekly Bar Chart
+            // MARK: Bar chart from before
             WeeklyBarChartView()
                 .environmentObject(taskVM)
 
@@ -103,26 +103,7 @@ struct ProgressHeatmapView: View {
         .background(AppColorPalette.background.ignoresSafeArea())
     }
 
-    // MARK: - Helpers
-
-    func getDate(forColumn column: Int, row: Int) -> Date {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        let weekday = calendar.component(.weekday, from: today)
-
-        let daysFromToday = column * 7 + row - (weekday - 1)
-        return calendar.date(byAdding: .day, value: -daysFromToday, to: today) ?? today
-    }
-
-    func completedTaskCount(for date: Date) -> Int {
-        let start = Calendar.current.startOfDay(for: date)
-        return taskVM.tasks.filter {
-            $0.isCompleted &&
-            $0.date != nil &&
-            Calendar.current.isDate($0.date!, inSameDayAs: start)
-        }.count
-    }
-
+    // MARK: Color helper (reuse from before)
     func color(for count: Int) -> Color {
         switch count {
         case 0: return Color.gray.opacity(0.15)
@@ -132,42 +113,24 @@ struct ProgressHeatmapView: View {
         default: return Color.green
         }
     }
-
-    func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
-    }
-
-    func monthLabel(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM"
-        return formatter.string(from: date)
-    }
-
-    func weekdayLabel(for row: Int) -> String {
-        switch row {
-        case 0: return "Mon"
-        case 2: return "Wed"
-        case 4: return "Fri"
-        default: return ""
-        }
-    }
 }
 
+// MARK: WeeklyBarChartView из твоего кода (без изменений)
 struct WeeklyBarChartView: View {
     @EnvironmentObject var taskVM: TaskViewModel
+    @State private var selectedWeekStart: Date = Calendar.current.startOfWeek(for: Date())
+    @State private var selectedBar: String? = nil
+    @Environment(\.dismiss) private var dismiss
 
     struct DayStat: Identifiable {
-        var id = UUID()
-        var day: String
-        var count: Int
+        let id = UUID()
+        let day: String
+        let count: Int
     }
 
     var data: [DayStat] {
         let calendar = Calendar.current
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date()))!
-        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: startOfWeek) }
+        let days = (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: selectedWeekStart) }
 
         return days.map { date in
             let count = taskVM.tasks.filter {
@@ -181,29 +144,133 @@ struct WeeklyBarChartView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("This Week")
-                .font(.headline)
-                .foregroundColor(.white)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(currentMonth(from: selectedWeekStart))
+                        .font(.headline)
+                        .foregroundColor(.white)
+
+                    Spacer()
+
+                    HStack(spacing: 12) {
+                        Button {
+                            withAnimation {
+                                selectedWeekStart = Calendar.current.date(byAdding: .day, value: -7, to: selectedWeekStart) ?? selectedWeekStart
+                                selectedBar = nil
+                            }
+                        } label: {
+                            Image(systemName: "chevron.left")
+                                .foregroundColor(.gray)
+                        }
+
+                        Button {
+                            withAnimation {
+                                selectedWeekStart = Calendar.current.date(byAdding: .day, value: 7, to: selectedWeekStart) ?? selectedWeekStart
+                                selectedBar = nil
+                            }
+                        } label: {
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                    }
+                }
                 .padding(.horizontal)
 
-            Chart(data) {
-                BarMark(
-                    x: .value("Day", $0.day),
-                    y: .value("Completed", $0.count)
-                )
-                .foregroundStyle(Color.blue)
-                .cornerRadius(5)
-            }
-            .frame(height: 160)
-            .padding(.horizontal)
-        }
-    }
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white.opacity(0.03))
+                    .frame(height: 180)
+                    .overlay(
+                        Chart(data) { item in
+                            BarMark(
+                                x: .value("Day", item.day),
+                                y: .value("Completed", min(item.count, 5))
+                            )
+                            .foregroundStyle(Color.blue)
+                            .cornerRadius(5)
 
-    func weekdayShortName(for date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E"
-        return formatter.string(from: date)
+                            if let selected = selectedBar, selected == item.day {
+                                PointMark(
+                                    x: .value("Day", item.day),
+                                    y: .value("Completed", min(item.count, 5))
+                                )
+                                .annotation(position: .top) {
+                                    Text("Выполнено: \(item.count)")
+                                        .font(.caption2)
+                                        .foregroundColor(.white)
+                                        .padding(5)
+                                        .background(Color.black.opacity(0.7))
+                                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                                }
+                            }
+                        }
+                        .chartYScale(domain: 0...5)
+                        .chartYAxis {
+                            AxisMarks(values: Array(stride(from: 5, through: 0, by: -1))) {
+                                AxisGridLine()
+                                AxisTick()
+                                AxisValueLabel()
+                            }
+                        }
+                        .chartXAxis {
+                            AxisMarks(position: .bottom)
+                        }
+                        .chartLegend(.hidden)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onEnded { value in
+                                    let chartWidth = UIScreen.main.bounds.width - 40
+                                    let x = value.location.x - 20
+                                    let index = Int((x / chartWidth) * CGFloat(data.count))
+                                    if index >= 0 && index < data.count {
+                                        let tappedDay = data[index].day
+                                        if selectedBar == tappedDay {
+                                            selectedBar = nil
+                                        } else {
+                                            selectedBar = tappedDay
+                                        }
+                                    }
+                                }
+                        )
+                        .padding()
+                    )
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Button(action: {
+                dismiss()
+            }) {
+                Text("Вернуться")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(16)
+                    .padding(.horizontal)
+            }
+            .padding(.bottom, 10)
+        }
+        .background(AppColorPalette.background.ignoresSafeArea())
+    }
+}
+
+func weekdayShortName(for date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "E"
+    return formatter.string(from: date)
+}
+
+func currentMonth(from date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "LLLL yyyy"
+    return formatter.string(from: date)
+}
+
+extension Calendar {
+    func startOfWeek(for date: Date) -> Date {
+        self.date(from: self.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)) ?? date
     }
 }
 
