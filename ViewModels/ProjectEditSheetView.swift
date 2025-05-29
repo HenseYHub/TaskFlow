@@ -8,6 +8,7 @@ struct ProjectEditSheetView: View {
     @Binding var date: Date
     @Binding var startTime: Date
     @Binding var endTime: Date
+    @Binding var isCompleted: Bool   // <-- добавлено
     
     var projectIndex: Int
     
@@ -70,6 +71,13 @@ struct ProjectEditSheetView: View {
                     }
                 }
 
+                // Добавляем переключатель "Выполнено"
+                Toggle(isOn: $isCompleted) {
+                    Text("Completed")
+                        .foregroundColor(.white)
+                }
+                .padding()
+
                 Spacer()
 
                 Button(action: {
@@ -116,6 +124,7 @@ struct ProjectEditSheetView: View {
     @State var date = Date()
     @State var startTime = Date()
     @State var endTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+    @State var isCompleted = false   // <-- добавлено
     let projectIndex = 0
 
     return ProjectEditSheetView(
@@ -126,6 +135,35 @@ struct ProjectEditSheetView: View {
         date: $date,
         startTime: $startTime,
         endTime: $endTime,
+        isCompleted: $isCompleted,  // <-- передаем сюда
+        projectIndex: projectIndex
+    )
+    .environmentObject(ProjectViewModel())
+}
+
+
+
+#Preview {
+    @State var isPresented = true
+    @State var title = "Game Design"
+    @State var description = "Create menu in dashboard & Make user flow"
+    @State var comment = "Main project screen"
+    @State var date = Date()
+    @State var startTime = Date()
+    @State var endTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+    @State var isCompleted = false  // вот сюда добавляем состояние
+
+    let projectIndex = 0
+
+    return ProjectEditSheetView(
+        isPresented: $isPresented,
+        title: $title,
+        description: $description,
+        comment: $comment,
+        date: $date,
+        startTime: $startTime,
+        endTime: $endTime,
+        isCompleted: $isCompleted,  // и сюда передаем биндинг
         projectIndex: projectIndex
     )
     .environmentObject(ProjectViewModel())

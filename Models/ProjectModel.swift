@@ -8,6 +8,7 @@ struct ProjectModel: Identifiable {
     var date: Date
     var startTime: Date
     var endTime: Date
+    var isCompleted: Bool = false
 
     // Инициализатор с поддержкой кастомного id
     init(id: UUID = UUID(), title: String, description: String, comment: String, date: Date, startTime: Date, endTime: Date) {

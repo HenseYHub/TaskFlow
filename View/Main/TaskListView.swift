@@ -17,6 +17,7 @@ struct TaskListView: View {
     @State private var editDate = Date()
     @State private var editStartTime = Date()
     @State private var editEndTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+    @State private var editIsCompleted = false
 
     @State private var showCreateTaskView = false
 
@@ -269,6 +270,7 @@ struct TaskListView: View {
                 date: $editDate,
                 startTime: $editStartTime,
                 endTime: $editEndTime,
+                isCompleted: $editIsCompleted,
                 projectIndex: selectedProjectIndex
             )
             .environmentObject(projectViewModel)

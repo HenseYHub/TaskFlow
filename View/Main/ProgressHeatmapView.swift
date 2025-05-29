@@ -3,6 +3,7 @@ import Charts
 
 struct ProgressHeatmapView: View {
     @EnvironmentObject var taskVM: TaskViewModel
+    @EnvironmentObject var projectVM: ProjectViewModel
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Circle progress
@@ -28,27 +29,52 @@ struct ProgressHeatmapView: View {
         }.count
     }
 
-    @State private var animatedProgress: CGFloat = 0
+    // Аналогично для проектов
+    private var completedProjectsThisMonth: Int {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: monthStartDate)
+        return projectVM.projects.filter { project in
+            project.isCompleted &&
+            (calendar.isDate(project.date, inSameDayAs: start) || project.date >= start)
+        }.count
+    }
 
-    private var progress: CGFloat {
+    private var totalProjectsThisMonth: Int {
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: monthStartDate)
+        return projectVM.projects.filter { project in
+            project.date >= start
+        }.count
+    }
+
+    @State private var animatedTaskProgress: CGFloat = 0
+    @State private var animatedProjectProgress: CGFloat = 0
+
+    private var taskProgress: CGFloat {
         guard totalTasksThisMonth > 0 else { return 0 }
         return CGFloat(completedTasksThisMonth) / CGFloat(totalTasksThisMonth)
+    }
+
+    private var projectProgress: CGFloat {
+        guard totalProjectsThisMonth > 0 else { return 0 }
+        return CGFloat(completedProjectsThisMonth) / CGFloat(totalProjectsThisMonth)
     }
 
     private let circleSize: CGFloat = 160
 
     var body: some View {
         VStack(spacing: 32) {
-            // MARK: Circle progress with count
+            // MARK: Circle progress with two rings
             ZStack {
+                // Внешнее кольцо - проекты (больше радиус)
                 Circle()
-                    .stroke(Color.gray.opacity(0.2), lineWidth: 16)
+                    .stroke(Color.purple.opacity(0.2), lineWidth: 16)
 
                 Circle()
-                    .trim(from: 0, to: animatedProgress)
+                    .trim(from: 0, to: animatedProjectProgress)
                     .stroke(
                         AngularGradient(
-                            gradient: Gradient(colors: [Color.purple, Color.red, Color.orange]),
+                            gradient: Gradient(colors: [Color.purple, Color.red]),
                             center: .center,
                             startAngle: .degrees(0),
                             endAngle: .degrees(360)
@@ -57,44 +83,55 @@ struct ProgressHeatmapView: View {
                     )
                     .rotationEffect(.degrees(-90))
 
+                // Внутреннее кольцо - задачи (меньше радиус)
+                Circle()
+                    .stroke(Color.blue.opacity(0.2), lineWidth: 12)
+                    .frame(width: circleSize - 20, height: circleSize - 20)
+
+                Circle()
+                    .trim(from: 0, to: animatedTaskProgress)
+                    .stroke(
+                        AngularGradient(
+                            gradient: Gradient(colors: [Color.blue, Color.cyan]),
+                            center: .center,
+                            startAngle: .degrees(0),
+                            endAngle: .degrees(360)
+                        ),
+                        style: StrokeStyle(lineWidth: 12, lineCap: .round)
+                    )
+                    .frame(width: circleSize - 20, height: circleSize - 20)
+                    .rotationEffect(.degrees(-20))
+
+                // Текст внутри круга — показать прогресс задач и проектов
                 VStack(spacing: 6) {
                     Text("\(completedTasksThisMonth)")
-                        .font(.system(size: 48, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.blue)
 
-                    Text("of \(totalTasksThisMonth)")
+                    Text("Tasks")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+
+                    Divider().frame(width: 80).background(Color.gray.opacity(0.3))
+
+                    Text("\(completedProjectsThisMonth)")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.purple)
+
+                    Text("Projects")
                         .font(.subheadline)
                         .foregroundColor(.gray)
                 }
             }
             .frame(width: circleSize, height: circleSize)
-            .padding(.top, 32)
+            .padding(.top, 24)
             .onAppear {
                 withAnimation(.easeOut(duration: 1.5)) {
-                    animatedProgress = progress
+                    animatedTaskProgress = taskProgress
+                    animatedProjectProgress = projectProgress
                 }
             }
 
-            // MARK: Legend under circle
-            HStack(spacing: 6) {
-                Text("Less")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-
-                ForEach([0, 1, 2, 3, 4], id: \.self) { i in
-                    Rectangle()
-                        .fill(color(for: i))
-                        .frame(width: 14, height: 14)
-                        .cornerRadius(2)
-                }
-
-                Text("More")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-            }
-            .padding(.horizontal)
-
-            // MARK: Bar chart from before
             WeeklyBarChartView()
                 .environmentObject(taskVM)
 
@@ -277,4 +314,5 @@ extension Calendar {
 #Preview {
     ProgressHeatmapView()
         .environmentObject(TaskViewModel())
+        .environmentObject(ProjectViewModel()) // Обязательно добавить
 }
