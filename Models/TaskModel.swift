@@ -18,17 +18,4 @@ struct TaskModel: Identifiable, Hashable {
     var durationText: String {
         return "\(durationInMinutes) хв"
     }
-
-    // 🧩 пример задачи с проектом
-    static let sample = TaskModel(
-        id: UUID(),
-        name: "Учёба (Swift)",
-        durationInMinutes: 25,
-        date: Date(),
-        isCompleted: false,
-        category: "Study",
-        remindMe: false,
-        comment: "Пишу таск трекер",
-        project: "Game Design"
-    )
 }
