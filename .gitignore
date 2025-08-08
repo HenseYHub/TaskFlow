@@ -1,0 +1,26 @@
+# ===== Xcode =====
+DerivedData/
+build/
+*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
+xcuserdata/
+*.xccheckout
+*.moved-aside
+
+# ===== Swift Package Manager =====
+.swiftpm/
+Packages/
+Package.resolved
+
+# ===== CocoaPods =====
+Pods/
+
+# ===== Logs & Cache =====
+*.log
+.DS_Store
+
+# ===== Firebase =====
+GoogleService-Info.plist
+
+# ===== Others =====
+*.swp
+*.swo
