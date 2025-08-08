@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var taskVM: TaskViewModel
+    @EnvironmentObject var authVM: AuthViewModel
     @StateObject private var userProfile = UserProfileModel()
     @State private var profileImage: UIImage? = nil
     @State private var isShowingImagePicker = false
@@ -11,6 +12,7 @@ struct ProfileView: View {
     @State private var showChangePasswordSheet = false
     @AppStorage("isLoggenIn") var isLoggedIn: Bool = true
     @State private var showProgressHeatmap = false
+    @State private var showLogoutAlert = false
 
         
     var body: some View {
@@ -98,14 +100,14 @@ struct ProfileView: View {
                         } label: {
                             ProfileRow(icon: "person.circle", title: "My Account")
                         }
-
-
+                        
+                        
                         Button(action: {
                             showChangePasswordSheet = true
                         }) {
                             ProfileRow(icon: "lock.circle", title: "Change Password")
                         }
-
+                        
                         Button {
                             showProgressHeatmap = true
                         } label: {
@@ -115,12 +117,17 @@ struct ProfileView: View {
                             ProgressHeatmapView()
                                 .environmentObject(taskVM)
                         }
-
-
+                        
                         Button {
-                            isLoggedIn = false
+                            showLogoutAlert = true
                         } label: {
                             ProfileRow(icon: "arrow.left.circle", title: "Log Out", color: .red)
+                        }
+                        .alert("Are you sure you want to log out?", isPresented: $showLogoutAlert) {
+                            Button("Log Out", role: .destructive) {
+                                authVM.signOut()
+                            }
+                            Button("Cancel", role: .cancel) { }
                         }
                     }
                     .padding(.top)

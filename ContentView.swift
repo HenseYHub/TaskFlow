@@ -10,9 +10,12 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        TaskListView()
+        NavigationView {
+            LoginView()
+        }
     }
 }
+
 
 #Preview {
     ContentView()
