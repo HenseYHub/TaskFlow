@@ -10,10 +10,9 @@ struct MainTabView: View {
     @EnvironmentObject var projectViewModel: ProjectViewModel
 
     init() {
-        // Настройка фона TabBar через UIKit
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(AppColorPalette.background) // кастомный цвет
+        appearance.backgroundColor = UIColor(AppColorPalette.background)
         UITabBar.appearance().standardAppearance = appearance
         if #available(iOS 15.0, *) {
             UITabBar.appearance().scrollEdgeAppearance = appearance
@@ -23,44 +22,37 @@ struct MainTabView: View {
     var body: some View {
         ZStack {
             AppColorPalette.background
-                        .ignoresSafeArea(.all, edges: .all)
+                .ignoresSafeArea(.all, edges: .all)
+
             VStack(spacing: 0) {
                 Spacer()
 
                 TabView(selection: $selectedTab) {
+                    // HOME → DailyTimelineView
                     NavigationStack {
-                        TaskListView()
+                        DailyTimelineView()
                     }
-                    .tabItem {
-                        Label("Home", systemImage: "house")
-                    }
+                    .tabItem { Label("Home", systemImage: "house") }
                     .tag(0)
 
-                    DailyTimelineView()
-                        .environmentObject(taskViewModel)
-                        .tabItem {
-                            Label("Focus", systemImage: "timer")
-                        }
-                        .tag(1)
+            
+                    NavigationStack {
+                        FocusView()
+                    }
+                    .tabItem { Label("Focus", systemImage: "timer") }
+                    .tag(1)
 
-
-                    // Пустой таб для размещения кнопки "+"
+                    // Пустой таб для кнопки "+"
                     Color.clear
-                        .tabItem {
-                            Image(systemName: "")
-                        }
+                        .tabItem { Image(systemName: "") }
                         .tag(2)
 
                     ProfileView()
-                        .tabItem {
-                            Label("Profile", systemImage: "person.crop.circle")
-                        }
+                        .tabItem { Label("Profile", systemImage: "person.crop.circle") }
                         .tag(3)
 
                     SettingsView()
-                        .tabItem {
-                            Label("Settings", systemImage: "gearshape")
-                        }
+                        .tabItem { Label("Settings", systemImage: "gearshape") }
                         .tag(4)
                 }
             }
@@ -70,9 +62,7 @@ struct MainTabView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Button(action: {
-                        showCreateTask = true
-                    }) {
+                    Button(action: { showCreateTask = true }) {
                         ZStack {
                             Circle()
                                 .fill(Color.black)

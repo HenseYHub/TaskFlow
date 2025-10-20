@@ -1,79 +1,75 @@
 import SwiftUI
 
 struct EditProfileView: View {
-    @Environment(\.dismiss) var dismiss
-    @ObservedObject var userProfile: UserProfileModel
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var userProfile: UserProfileModel
+
+    // Редактируем только эти два поля
+    @State private var nickname: String = ""
+    @State private var profession: String = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Заголовок
-            Text("Edit Profile")
-                .font(.title2.bold())
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity, alignment: .center)
-
-            // Поля
-            Group {
-                ProfileInputField(title: "Full Name", text: $userProfile.fullName)
-                ProfileInputField(title: "Your Dream Profession", text: $userProfile.profession)
-                ProfileInputField(title: "Nickname", text: $userProfile.nickname)
-                ProfileInputField(title: "E-mail", text: $userProfile.email, keyboardType: .emailAddress)
-            }
-
-            Spacer()
-
-            // Кнопки
-            HStack(spacing: 16) {
-                Button("Cancel") {
-                    dismiss()
+        NavigationStack {
+            Form {
+                Section("Profile") {
+                    TextField("Nickname", text: $nickname)
+                    TextField("Your Dream Profession", text: $profession)
                 }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.white.opacity(0.05))
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
-
-                Button("Save") {
-                    dismiss()
-                }
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.blue)
-                .foregroundColor(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
+            .navigationTitle("Edit Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveIntoModel()
+                        dismiss()
+                    }
+                    .disabled(nickname.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .onAppear(perform: loadFromModel)
         }
-        .padding()
-        .background(AppColorPalette.background.ignoresSafeArea())
+    }
+
+    // MARK: - Sync
+
+    private func loadFromModel() {
+        let p = userProfile.profile
+        nickname   = p?.nickname   ?? ""
+        profession = p?.profession ?? ""
+    }
+
+    private func saveIntoModel() {
+        // Берём существующие значения fullName/email/аватар, чтобы не потерять
+        let current = userProfile.profile
+        let new = UserProfile(
+            id: current?.id ?? UUID().uuidString,
+            fullName: current?.fullName ?? "",             // сохраняем как было
+            nickname: nickname,                             // обновляем
+            profession: profession,                         // обновляем
+            email: current?.email ?? "",                    // сохраняем как было
+            avatarJPEGData: current?.avatarJPEGData         // сохраняем как было
+        )
+        userProfile.profile = new
     }
 }
 
-// MARK: - Custom Input Field
-struct ProfileInputField: View {
-    var title: String
-    @Binding var text: String
-    var keyboardType: UIKeyboardType = .default
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .foregroundColor(.gray)
-                .font(.caption)
-
-            TextField("Enter \(title.lowercased())", text: $text)
-                .keyboardType(keyboardType)
-                .foregroundColor(.white)
-                .padding(12)
-                .background(Color.white.opacity(0.05))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-    }
-}
-
+#if DEBUG
 #Preview {
-    EditProfileView(userProfile: UserProfileModel())
-        .environmentObject(UserProfileModel())
+    let model = UserProfileModel()
+    model.profile = UserProfile(
+        id: "preview",
+        fullName: "Pavlo Brodiuk",
+        nickname: "pavlo.dev",
+        profession: "iOS Dev",
+        email: "pavlo.dev@example.com",
+        avatarJPEGData: nil
+    )
+    return EditProfileView()
+        .environmentObject(model)
         .preferredColorScheme(.dark)
 }
+#endif

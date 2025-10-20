@@ -3,18 +3,22 @@ import SwiftUI
 struct DailyTimelineView: View {
     @EnvironmentObject var taskViewModel: TaskViewModel
     @EnvironmentObject var userProfile: UserProfileModel
+    @EnvironmentObject var projectViewModel: ProjectViewModel
+
+    @State private var showCreateProjectView = false
     @State private var selectedDate: Date = Date()
     @State private var selectedTaskID: UUID? = nil
 
+    // есть ли проекты (для показа/скрытия пустого состояния)
+    private var hasProjects: Bool { !projectViewModel.projects.isEmpty }
+
+    // задачи на выбранную дату
     var filteredTasks: [TaskModel] {
         let sameDayTasks = taskViewModel.tasks.filter {
             guard let taskDate = $0.date else { return false }
             return Calendar.current.isDate(taskDate, inSameDayAs: selectedDate)
         }
-
-        return sameDayTasks.sorted {
-            ($0.startTime ?? Date()) < ($1.startTime ?? Date())
-        }
+        return sameDayTasks.sorted { ($0.startTime ?? Date()) < ($1.startTime ?? Date()) }
     }
 
     var body: some View {
@@ -40,7 +44,9 @@ struct DailyTimelineView: View {
 
                     Spacer()
 
-                    if let image = userProfile.avatarImage {
+                    // ✅ было: userProfile.avatarImage
+                    if let image = userProfile.avatarImage
+                        ?? userProfile.profile?.avatarJPEGData.flatMap({ UIImage(data: $0) }) {
                         Image(uiImage: image)
                             .resizable()
                             .scaledToFill()
@@ -55,10 +61,7 @@ struct DailyTimelineView: View {
                 }
                 .padding(.horizontal)
 
-                // MARK: Calendar Scroll
-                // ...
-
-                // MARK: Calendar Scroll
+                // MARK: Calendar Scroll (2 недели)
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -67,12 +70,9 @@ struct DailyTimelineView: View {
                                 let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
 
                                 VStack(spacing: 6) {
-                                    Text(dayNumber(date))
-                                        .font(.headline)
-                                    Text(shortWeekday(date))
-                                        .font(.caption2)
+                                    Text(dayNumber(date)).font(.headline)
+                                    Text(shortWeekday(date)).font(.caption2)
 
-                                    // Точка под датой
                                     Circle()
                                         .fill(isSelected ? .black : .gray)
                                         .frame(width: 6, height: 6)
@@ -99,140 +99,195 @@ struct DailyTimelineView: View {
                     .onAppear {
                         let todayIndex = 7
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation {
-                                proxy.scrollTo(todayIndex, anchor: .center)
-                            }
+                            withAnimation { proxy.scrollTo(todayIndex, anchor: .center) }
                         }
                     }
                 }
-
             }
             .padding(.top)
 
-            // MARK: Timeline
-            ScrollView {
-                VStack(alignment: .leading, spacing: 32) {
-                    ForEach(Array(filteredTasks.enumerated()), id: \.element.id) { index, task in
-                        HStack(alignment: .top, spacing: 16) {
-                            VStack(spacing: 0) {
-                                Circle()
-                                    .strokeBorder(Color.white, lineWidth: 2)
-                                    .background(
-                                        Circle().fill(selectedTaskID == task.id ? Color.white : Color.black)
-                                    )
-                                    .frame(width: 14, height: 14)
-
-                                if index < filteredTasks.count - 1 {
-                                    Rectangle()
-                                        .fill(Color.gray.opacity(0.3))
-                                        .frame(width: 2, height: 70)
-                                }
-                            }
-
-                            VStack(alignment: .leading, spacing: 6) {
-                                HStack {
-                                    Text(task.name)
-                                        .font(.headline)
-                                        .foregroundColor(task.isCompleted ? .gray : .white)
-                                        .strikethrough(task.isCompleted)
-
-                                    Spacer()
-
-                                    if let start = task.startTime, let end = task.endTime {
-                                        Text("\(formattedTime(start))–\(formattedTime(end))")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-
-                                if let comment = task.comment, !comment.isEmpty {
-                                    Text(comment)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-
-                                if selectedTaskID == task.id {
-                                    Button(action: {
-                                        withAnimation {
-                                            taskViewModel.toggleTaskCompletion(task: task)
-                                            if let nextTask = filteredTasks.first(where: { $0.id != task.id && !$0.isCompleted }) {
-                                                selectedTaskID = nextTask.id
-                                            }
-                                        }
-                                    }) {
-                                        Image(systemName: task.isCompleted ? "checkmark.square.fill" : "square")
-                                            .foregroundColor(task.isCompleted ? .green : .gray)
-                                            .font(.title2)
-                                    }
-                                    .padding(.top, 8)
-                                }
-                            }
-                            .padding()
-                            .background(selectedTaskID == task.id ? Color.white.opacity(0.05) : Color.clear)
-                            .cornerRadius(20)
-                            .onTapGesture {
-                                withAnimation {
-                                    selectedTaskID = task.id
-                                }
+            // MARK: Tasks list (гибрид: левая дата + карточка + свайпы)
+            List {
+                Section {
+                    ForEach(filteredTasks) { task in
+                        HybridTaskRow(task: task) {
+                            withAnimation {
+                                taskViewModel.toggleTaskCompletion(task: task)
                             }
                         }
+                        // свайп ВПРАВО → перенести на завтра
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                withAnimation {
+                                    taskViewModel.moveTask(task, byDays: 1)
+                                }
+                            } label: {
+                                Label("Tomorrow", systemImage: "arrow.right.circle")
+                            }
+                        }
+                        // свайп ВЛЕВО → удалить
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                withAnimation {
+                                    taskViewModel.deleteTask(task)
+                                }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
 
                     if filteredTasks.isEmpty {
                         Text("Немає задач на цей день")
                             .foregroundColor(.gray)
-                            .padding(.top, 40)
-                            .frame(maxWidth: .infinity)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 32)
             }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
         }
         .background(AppColorPalette.background.ignoresSafeArea())
+        .animation(.easeInOut, value: hasProjects)
+        .fullScreenCover(isPresented: $showCreateProjectView) {
+            CreateNewTaskView()
+                .environmentObject(taskViewModel)
+                .environmentObject(projectViewModel)
+                .environmentObject(userProfile)
+        }
     }
 
     // MARK: Helpers
 
     func hasTasks(on date: Date) -> Bool {
-        taskViewModel.tasks.contains {
-            Calendar.current.isDate($0.date ?? Date(), inSameDayAs: date)
-        }
+        taskViewModel.tasks.contains { Calendar.current.isDate($0.date ?? Date(), inSameDayAs: date) }
     }
 
     func dayNumber(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "d"
+        let formatter = DateFormatter(); formatter.dateFormat = "d"
         return formatter.string(from: date)
     }
 
     func shortWeekday(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "E"
+        let formatter = DateFormatter(); formatter.dateFormat = "E"
         return formatter.string(from: date)
     }
 
     func formattedFullDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMMM d, yyyy"
+        let formatter = DateFormatter(); formatter.dateFormat = "MMMM d, yyyy"
         return formatter.string(from: date)
     }
 
     func formattedWeekday(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE"
+        let formatter = DateFormatter(); formatter.dateFormat = "EEEE"
         return formatter.string(from: date)
     }
 
     func formattedTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm"
+        let formatter = DateFormatter(); formatter.dateFormat = "HH:mm"
         return formatter.string(from: date)
     }
 }
 
+#if DEBUG
 #Preview {
-    DailyTimelineView()
+    // Мок-профиль для превью
+    let profile = UserProfileModel()
+    profile.profile = UserProfile(
+        id: "preview",
+        fullName: "Pasha",
+        nickname: "pavlo.dev",
+        profession: "iOS Dev",
+        email: "p@example.com",
+        avatarJPEGData: nil
+    )
+
+    return DailyTimelineView()
         .environmentObject(TaskViewModel())
-        .environmentObject(UserProfileModel())
+        .environmentObject(profile)
+        .environmentObject(ProjectViewModel())
+}
+#endif
+
+// MARK: - Гибридная строка (левая панель даты + карточка задачи)
+private struct HybridTaskRow: View {
+    let task: TaskModel
+    let onToggle: () -> Void
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Левая панель даты/дня недели
+            VStack(alignment: .leading, spacing: 2) {
+                Text(weekdayShort(task.date)).font(.caption2).foregroundColor(.gray)
+                Text(dayNumber(task.date)).font(.title3.bold()).foregroundColor(.white)
+            }
+            .frame(width: 46, alignment: .leading)
+
+            // Карточка
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(task.name)
+                        .font(.headline)
+                        .foregroundColor(task.isCompleted ? .gray : .white)
+                        .strikethrough(task.isCompleted)
+
+                    Spacer()
+
+                    if let s = task.startTime, let e = task.endTime {
+                        Text("\(time(s))–\(time(e))")
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                    }
+                }
+
+                if let c = task.comment, !c.isEmpty {
+                    Text(c).font(.subheadline).foregroundColor(.gray).lineLimit(2)
+                }
+
+                Button(action: onToggle) {
+                    Label(task.isCompleted ? "Позначено як виконано" : "Позначити виконаною",
+                          systemImage: task.isCompleted ? "checkmark.square.fill" : "square")
+                        .font(.footnote)
+                        .foregroundColor(task.isCompleted ? .green : .gray)
+                }
+                .padding(.top, 4)
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.06)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.08)))
+        }
+        .contentShape(Rectangle())
+    }
+
+    // локальные хелперы
+    private func dayNumber(_ date: Date?) -> String {
+        let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: date ?? Date())
+    }
+    private func weekdayShort(_ date: Date?) -> String {
+        let f = DateFormatter(); f.dateFormat = "E"; return f.string(from: date ?? Date())
+    }
+    private func time(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"; return f.string(from: d)
+    }
+}
+
+// MARK: - Расширение VM для свайпов
+extension TaskViewModel {
+    func deleteTask(_ task: TaskModel) {
+        if let idx = tasks.firstIndex(where: { $0.id == task.id }) {
+            tasks.remove(at: idx)
+        }
+    }
+
+    func moveTask(_ task: TaskModel, byDays days: Int = 1) {
+        guard let idx = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+        let cal = Calendar.current
+        if let d = tasks[idx].date { tasks[idx].date = cal.date(byAdding: .day, value: days, to: d) }
+        if let s = tasks[idx].startTime { tasks[idx].startTime = cal.date(byAdding: .day, value: days, to: s) }
+        if let e = tasks[idx].endTime { tasks[idx].endTime = cal.date(byAdding: .day, value: days, to: e) }
+    }
 }
