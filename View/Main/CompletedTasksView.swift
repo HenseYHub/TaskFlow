@@ -9,18 +9,17 @@ struct CompletedTasksView: View {
 
     var body: some View {
         ZStack {
-            AppColorPalette.background.ignoresSafeArea() // Тёмный фон
+            AppColorPalette.background.ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 16) {
-                Text("Завершённые задачи")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                Text("Completed Tasks")
+                    .font(.title2.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.top)
 
                 if completedTasks.isEmpty {
-                    Text("Немає завершених задач 🙌")
+                    Text("No completed tasks 🙌")
                         .foregroundColor(.gray)
                         .padding(.horizontal)
                         .padding(.top, 50)
@@ -33,7 +32,7 @@ struct CompletedTasksView: View {
                                     Text(task.name)
                                         .font(.headline)
                                         .foregroundColor(.white)
-                                    Text("\(task.durationInMinutes) хв")
+                                    Text("\(task.durationInMinutes) min")
                                         .font(.subheadline)
                                         .foregroundColor(.gray)
                                 }
@@ -53,7 +52,6 @@ struct CompletedTasksView: View {
                             }
                         }
                     }
-
                     .listStyle(.plain)
                     .scrollContentBackground(.hidden)
                 }

@@ -69,7 +69,7 @@ struct EditProfileSheet: View {
                     .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
             .padding(.horizontal)
-            .padding(.top, 450) // немного поднимаем карточку
+            .padding(.top, ) // немного поднимаем карточку
         }
     }
 

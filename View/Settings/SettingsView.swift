@@ -1,53 +1,62 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @EnvironmentObject private var lang: LanguageController
+    @State private var notificationsOn = true
+
+    private let languages: [(code: String, name: String)] = [
+        ("uk", "Українська"), ("en", "English"), ("de", "Deutsch")
+    ]
+
     var body: some View {
-        NavigationStack {
-            List {
-                // Уведомления
-                Section(header: Text("Уведомления")) {
-                    Toggle("Разрешить уведомления", isOn: .constant(true))
-                    // Здесь позже можно добавить настройки звука, времени и т.д.
-                }
+        List {
+            Section(header: Text(LocalizedStringKey("settings_notifications_header"))) {
+                Toggle(LocalizedStringKey("settings_notifications_allow"), isOn: $notificationsOn)
+            }
 
-                // Язык интерфейса
-                Section(header: Text("Язык интерфейса")) {
-                    Picker("Мова", selection: .constant("Українська")) {
-                        Text("Українська").tag("Українська")
-                        Text("Русский").tag("Русский")
-                        Text("English").tag("English")
-                    }
-                }
-
-                // Конфиденциальность
-                Section(header: Text("Данные и конфиденциальность")) {
-                    NavigationLink("Управление данными") {
-                        Text("Здесь будут опции для экспорта, очистки данных и политики конфиденциальности")
-                            .padding()
-                    }
-                }
-
-                // О приложении
-                Section(header: Text("О приложении")) {
-                    HStack {
-                        Text("Версия")
-                        Spacer()
-                        Text("1.0.0")
-                            .foregroundColor(.gray)
-                    }
-                    NavigationLink("О разработке") {
-                        Text("TaskFlow — приложение для управления задачами с таймером и проектами.")
-                            .padding()
+            Section(header: Text(LocalizedStringKey("settings_language_header"))) {
+                Picker(LocalizedStringKey("settings_language_picker_title"), selection: $lang.appLanguage) {
+                    ForEach(languages, id: \.code) { item in
+                        Text(item.name).tag(item.code)
                     }
                 }
             }
-            .navigationTitle("Настройки")
-            .scrollContentBackground(.hidden)
-            .background(AppColorPalette.background)
+
+            Section(header: Text(LocalizedStringKey("settings_privacy_header"))) {
+                NavigationLink(LocalizedStringKey("settings_data_manage")) {
+                    Text(LocalizedStringKey("settings_data_placeholder"))
+                        .padding()
+                }
+            }
+
+            Section(header: Text(LocalizedStringKey("settings_about_header"))) {
+                HStack {
+                    Text(LocalizedStringKey("settings_version"))
+                    Spacer()
+                    Text(appVersionString).foregroundColor(.gray)
+                }
+                NavigationLink(LocalizedStringKey("settings_about_development")) {
+                    Text(LocalizedStringKey("settings_about_text"))
+                        .padding()
+                }
+            }
         }
+        .navigationTitle(Text(LocalizedStringKey("settings_title")))
+        .scrollContentBackground(.hidden)
+        .background(AppColorPalette.background)
+        .environment(\.locale, lang.locale)   // ← форсим локаль для экрана
+        .id(lang.appLanguage)                 // ← принудительный ре-рендер
+    }
+
+    private var appVersionString: String {
+        let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+        let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
+        return "\(v) (\(b))"
     }
 }
 
+
 #Preview {
-    SettingsView()
+    NavigationStack { SettingsView() } // оборачиваем только для превью
+        .environmentObject(LanguageController())
 }

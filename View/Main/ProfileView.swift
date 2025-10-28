@@ -1,5 +1,5 @@
 import SwiftUI
-import UIKit // для UIImagePickerController
+import UIKit
 
 struct ProfileView: View {
     @Environment(\.dismiss) private var dismiss
@@ -7,7 +7,6 @@ struct ProfileView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var userProfile: UserProfileModel
     @EnvironmentObject var projectVM: ProjectViewModel
-
 
     // Аватар (persist)
     @State private var profileImage: UIImage?
@@ -41,16 +40,15 @@ struct ProfileView: View {
         .sheet(isPresented: $isEditingProfile) {
             EditProfileSheet()
                 .environmentObject(userProfile)
-                .presentationDetents([.fraction(0.5), .large])        // не на весь экран
-                .presentationDragIndicator(.visible)                    // «черточка»
+                .presentationDetents([.height(320)])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(.regularMaterial)
                 .presentationCornerRadius(24)
-                .background(AppColorPalette.background.ignoresSafeArea())
         }
-
         // лист смены пароля
         .sheet(isPresented: $showChangePasswordSheet) {
             ChangePasswordSheet()
-                .presentationDetents([.height(380)])
+                .presentationDetents([.height(420)])
                 .presentationDragIndicator(.visible)
         }
         // пикер аватара
@@ -70,7 +68,7 @@ struct ProfileView: View {
     private func headerView() -> some View {
         HStack {
             Spacer()
-            Text("Profile")
+            Text("profile_title") // Localized
                 .font(.title2.bold())
                 .foregroundColor(.white)
             Spacer()
@@ -90,7 +88,7 @@ struct ProfileView: View {
                     .resizable()
                     .scaledToFit()
                     .foregroundColor(.gray)
-                    .padding(24)
+                    .padding(20)
             }
         }
         .frame(width: 120, height: 120)
@@ -98,13 +96,12 @@ struct ProfileView: View {
         .clipShape(RoundedRectangle(cornerRadius: 24))
         .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.5), lineWidth: 1))
         .onTapGesture { isShowingImagePicker = true }
-        .accessibilityLabel("Avatar")
+        .accessibilityLabel(Text("avatar_accessibility"))
     }
 
     @ViewBuilder
     private func nameRoleView() -> some View {
         let p = userProfile.profile
-        // ник -> фуллнейм -> тире
         let displayName = (p?.nickname.isEmpty == false ? (p?.nickname ?? "")
                           : (p?.fullName ?? "—"))
         VStack(spacing: 4) {
@@ -125,7 +122,7 @@ struct ProfileView: View {
                 Text("\(completed)")
                     .font(.title2.bold())
                     .foregroundColor(.blue)
-                Text("Task Completed")
+                Text("task_completed") // Localized
                     .font(.caption)
                     .foregroundColor(.white)
             }
@@ -139,15 +136,15 @@ struct ProfileView: View {
     private func optionsView() -> some View {
         VStack(spacing: 10) {
             Button { isEditingProfile = true } label: {
-                ProfileRow(icon: "person.circle", title: "My Account")
+                ProfileRow(icon: "person.circle", titleKey: "my_account")
             }
 
             Button { showChangePasswordSheet = true } label: {
-                ProfileRow(icon: "lock.circle", title: "Change Password")
+                ProfileRow(icon: "lock.circle", titleKey: "change_password")
             }
 
             Button { showProgressHeatmap = true } label: {
-                ProfileRow(icon: "chart.bar", title: "My Progress")
+                ProfileRow(icon: "chart.bar", titleKey: "my_progress")
             }
             .fullScreenCover(isPresented: $showProgressHeatmap) {
                 ProgressHeatmapView()
@@ -156,11 +153,11 @@ struct ProfileView: View {
             }
 
             Button { showLogoutAlert = true } label: {
-                ProfileRow(icon: "arrow.left.circle", title: "Log Out", color: .red)
+                ProfileRow(icon: "arrow.left.circle", titleKey: "log_out", color: .red)
             }
-            .alert("Are you sure you want to log out?", isPresented: $showLogoutAlert) {
-                Button("Log Out", role: .destructive) { authVM.signOut() }
-                Button("Cancel", role: .cancel) { }
+            .alert("logout_confirm_title", isPresented: $showLogoutAlert) {
+                Button(String(localized: "log_out"), role: .destructive) { authVM.signOut() }
+                Button(String(localized: "cancel"), role: .cancel) { }
             }
         }
     }
@@ -168,14 +165,23 @@ struct ProfileView: View {
     // MARK: - Avatar persist
 
     private func loadSavedAvatar() {
-        guard let data = profileImageData, let img = UIImage(data: data) else { return }
-        profileImage = img
+        if let data = profileImageData, let img = UIImage(data: data) {
+            profileImage = img
+        } else if let data = userProfile.profile?.avatarJPEGData, let img = UIImage(data: data) {
+            // если ранее хранилось в модели — подтянем в @AppStorage
+            profileImage = img
+            profileImageData = data
+        }
     }
 
     private func saveAvatarIfNeeded() {
         guard let img = profileImage,
               let data = img.jpegData(compressionQuality: 0.9) else { return }
+        // сохраняем и в @AppStorage, и в профиль
         profileImageData = data
+        if userProfile.profile != nil {
+            userProfile.profile?.avatarJPEGData = data
+        }
     }
 }
 
@@ -192,18 +198,14 @@ struct LegacyImagePicker: UIViewControllerRepresentable {
         picker.allowsEditing = true
         return picker
     }
-
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
         private let parent: LegacyImagePicker
         init(_ parent: LegacyImagePicker) { self.parent = parent }
 
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
-        }
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.dismiss() }
 
         func imagePickerController(
             _ picker: UIImagePickerController,
@@ -211,19 +213,16 @@ struct LegacyImagePicker: UIViewControllerRepresentable {
         ) {
             let edited = info[.editedImage] as? UIImage
             let original = info[.originalImage] as? UIImage
-            if let uiImg = edited ?? original {
-                parent.image = uiImg
-            }
+            if let uiImg = edited ?? original { parent.image = uiImg }
             parent.dismiss()
         }
     }
 }
 
-// MARK: - Row
-
+// MARK: - Row (принимает локализованный ключ)
 struct ProfileRow: View {
     var icon: String
-    var title: String
+    var titleKey: LocalizedStringKey
     var color: Color = .blue
 
     var body: some View {
@@ -234,7 +233,7 @@ struct ProfileRow: View {
                 .background(color)
                 .clipShape(RoundedRectangle(cornerRadius: 15))
 
-            Text(title)
+            Text(titleKey) // Localized
                 .foregroundColor(color == .red ? .red : .white)
 
             Spacer()

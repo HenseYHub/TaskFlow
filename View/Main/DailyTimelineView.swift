@@ -4,15 +4,16 @@ struct DailyTimelineView: View {
     @EnvironmentObject var taskViewModel: TaskViewModel
     @EnvironmentObject var userProfile: UserProfileModel
     @EnvironmentObject var projectViewModel: ProjectViewModel
+    @AppStorage("profileImageData") private var profileImageData: Data?
 
     @State private var showCreateProjectView = false
     @State private var selectedDate: Date = Date()
     @State private var selectedTaskID: UUID? = nil
 
-    // есть ли проекты (для показа/скрытия пустого состояния)
+    // whether there are any projects (to toggle empty state)
     private var hasProjects: Bool { !projectViewModel.projects.isEmpty }
 
-    // задачи на выбранную дату
+    // tasks for the selected date
     var filteredTasks: [TaskModel] {
         let sameDayTasks = taskViewModel.tasks.filter {
             guard let taskDate = $0.date else { return false }
@@ -44,24 +45,24 @@ struct DailyTimelineView: View {
 
                     Spacer()
 
-                    // ✅ было: userProfile.avatarImage
-                    if let image = userProfile.avatarImage
-                        ?? userProfile.profile?.avatarJPEGData.flatMap({ UIImage(data: $0) }) {
-                        Image(uiImage: image)
+                    if let data = profileImageData, let ui = UIImage(data: data) {
+                        Image(uiImage: ui)
                             .resizable()
                             .scaledToFill()
                             .frame(width: 44, height: 44)
                             .clipShape(Circle())
+                            .overlay(Circle().stroke(.white.opacity(0.08), lineWidth: 1))
                     } else {
-                        Image(systemName: "person.crop.circle")
+                        Image(systemName: "person.crop.circle.fill")
                             .resizable()
+                            .scaledToFit()
                             .frame(width: 44, height: 44)
                             .foregroundColor(.gray)
                     }
                 }
                 .padding(.horizontal)
 
-                // MARK: Calendar Scroll (2 недели)
+                // MARK: Calendar Scroll (2 weeks)
                 ScrollViewReader { proxy in
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -106,7 +107,7 @@ struct DailyTimelineView: View {
             }
             .padding(.top)
 
-            // MARK: Tasks list (гибрид: левая дата + карточка + свайпы)
+            // MARK: Tasks list (left date rail + card + swipes)
             List {
                 Section {
                     ForEach(filteredTasks) { task in
@@ -115,7 +116,7 @@ struct DailyTimelineView: View {
                                 taskViewModel.toggleTaskCompletion(task: task)
                             }
                         }
-                        // свайп ВПРАВО → перенести на завтра
+                        // swipe RIGHT → move to tomorrow
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             Button {
                                 withAnimation {
@@ -125,7 +126,7 @@ struct DailyTimelineView: View {
                                 Label("Tomorrow", systemImage: "arrow.right.circle")
                             }
                         }
-                        // свайп ВЛЕВО → удалить
+                        // swipe LEFT → delete
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 withAnimation {
@@ -140,7 +141,7 @@ struct DailyTimelineView: View {
                     }
 
                     if filteredTasks.isEmpty {
-                        Text("Немає задач на цей день")
+                        Text("No tasks for this day")
                             .foregroundColor(.gray)
                             .frame(maxWidth: .infinity, alignment: .center)
                             .listRowBackground(Color.clear)
@@ -195,7 +196,7 @@ struct DailyTimelineView: View {
 
 #if DEBUG
 #Preview {
-    // Мок-профиль для превью
+    // mock profile for preview
     let profile = UserProfileModel()
     profile.profile = UserProfile(
         id: "preview",
@@ -213,21 +214,21 @@ struct DailyTimelineView: View {
 }
 #endif
 
-// MARK: - Гибридная строка (левая панель даты + карточка задачи)
+// MARK: - Hybrid row (left date rail + task card)
 private struct HybridTaskRow: View {
     let task: TaskModel
     let onToggle: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Левая панель даты/дня недели
+            // Left date rail
             VStack(alignment: .leading, spacing: 2) {
                 Text(weekdayShort(task.date)).font(.caption2).foregroundColor(.gray)
                 Text(dayNumber(task.date)).font(.title3.bold()).foregroundColor(.white)
             }
             .frame(width: 46, alignment: .leading)
 
-            // Карточка
+            // Card
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(task.name)
@@ -249,7 +250,7 @@ private struct HybridTaskRow: View {
                 }
 
                 Button(action: onToggle) {
-                    Label(task.isCompleted ? "Позначено як виконано" : "Позначити виконаною",
+                    Label(task.isCompleted ? "Marked as completed" : "Mark as completed",
                           systemImage: task.isCompleted ? "checkmark.square.fill" : "square")
                         .font(.footnote)
                         .foregroundColor(task.isCompleted ? .green : .gray)
@@ -263,7 +264,7 @@ private struct HybridTaskRow: View {
         .contentShape(Rectangle())
     }
 
-    // локальные хелперы
+    // local helpers
     private func dayNumber(_ date: Date?) -> String {
         let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: date ?? Date())
     }
@@ -275,7 +276,7 @@ private struct HybridTaskRow: View {
     }
 }
 
-// MARK: - Расширение VM для свайпов
+// MARK: - ViewModel helpers for swipe actions
 extension TaskViewModel {
     func deleteTask(_ task: TaskModel) {
         if let idx = tasks.firstIndex(where: { $0.id == task.id }) {

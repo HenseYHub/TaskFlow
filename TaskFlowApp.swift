@@ -9,10 +9,9 @@ struct TaskFlowApp: App {
     @StateObject var userProfile = UserProfileModel()
     @StateObject var projectViewModel = ProjectViewModel()
     @StateObject var authVM = AuthViewModel()
+    @StateObject private var lang = LanguageController()
 
-    init() {
-        FirebaseApp.configure() // ← Инициализация Firebase
-    }
+    init() { FirebaseApp.configure() }
 
     var body: some Scene {
         WindowGroup {
@@ -20,11 +19,12 @@ struct TaskFlowApp: App {
                 if authVM.isSignedIn {
                     MainTabView()
                 } else {
-                    NavigationView {
-                        LoginView()
-                    }
+                    NavigationView { LoginView() }
                 }
             }
+            // НЕ ставим .id здесь
+            .environment(\.locale, lang.locale)
+            .environmentObject(lang)
             .environmentObject(taskViewModel)
             .environmentObject(timerViewModel)
             .environmentObject(userProfile)
@@ -33,3 +33,4 @@ struct TaskFlowApp: App {
         }
     }
 }
+

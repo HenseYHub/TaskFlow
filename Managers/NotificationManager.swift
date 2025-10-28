@@ -14,9 +14,9 @@ class NotificationManager {
     func requestAuthorization() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if granted {
-                print("✅ Уведомления разрешены")
+                print("✅ Notifications are allowed")
             } else {
-                print("❌ Уведомления отклонены")
+                print("❌ Notifications are disabled")
             }
         }
     }

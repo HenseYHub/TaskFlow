@@ -13,7 +13,7 @@ struct SignUpView: View {
     @State private var shakeOffset: CGFloat = 0
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.dismiss) var dismiss
-    
+
     @State private var loginError: String?
 
     var body: some View {
@@ -28,7 +28,6 @@ struct SignUpView: View {
                 .rotationEffect(.degrees(135))
                 .offset(y: -350)
 
-
             ScrollView {
                 VStack(spacing: 20) {
                     Text("Create your Account")
@@ -37,11 +36,11 @@ struct SignUpView: View {
                         .padding(.top, 10)
                         .offset(y: -50)
 
-                    // Email field with placeholder
+                    // Email field
                     ZStack(alignment: .leading) {
                         if email.isEmpty {
-                            Text("example@gmail.соm")
-                                .foregroundColor(.white)
+                            Text("example@gmail.com")
+                                .foregroundColor(.white.opacity(0.8))
                                 .font(.system(size: 16))
                                 .padding(.leading, 16)
                         }
@@ -58,6 +57,7 @@ struct SignUpView: View {
                             )
                     }
 
+                    // Password field
                     ZStack(alignment: .leading) {
                         if password.isEmpty {
                             Text("Password")
@@ -71,18 +71,14 @@ struct SignUpView: View {
                                     .padding(12)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .textInputAutocapitalization(.none)
-                                    .disableAutocorrection(true)
-                            } else{
+                            } else {
                                 SecureField("", text: $password)
                                     .textContentType(.oneTimeCode)
                                     .padding(12)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .textInputAutocapitalization(.none)
-                                    .disableAutocorrection(true)
                             }
-                            
+
                             Button(action: {
                                 showPassword.toggle()
                             }) {
@@ -96,16 +92,16 @@ struct SignUpView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(Color.white.opacity(0.8), lineWidth: 1)
                     )
-                    
-                    
+
+                    // Confirm password field
                     ZStack(alignment: .leading) {
                         if confirmPassword.isEmpty {
                             Text("Confirm Password")
                                 .foregroundColor(.white)
                                 .padding(.leading, 16)
                                 .frame(height: 44)
-                                .alignmentGuide(.firstTextBaseline) { _ in 22 }
-                                }
+                        }
+
                         HStack {
                             if showConfirmPassword {
                                 TextField("", text: $confirmPassword)
@@ -113,31 +109,28 @@ struct SignUpView: View {
                                     .padding(12)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .textInputAutocapitalization(.none)
-                                    .disableAutocorrection(true)
                             } else {
                                 SecureField("", text: $confirmPassword)
                                     .textContentType(.oneTimeCode)
                                     .padding(12)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .textInputAutocapitalization(.none)
-                                    .disableAutocorrection(true)
                             }
-                            
+
                             Button(action: {
                                 showConfirmPassword.toggle()
                             }) {
-                                Image(systemName: showConfirmPassword ? "eye.slash": "eye")
+                                Image(systemName: showConfirmPassword ? "eye.slash" : "eye")
                                     .foregroundColor(.white.opacity(0.7))
                             }
                             .padding(.trailing, 8)
                         }
                     }
                     .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.8), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.8), lineWidth: 1)
                     )
+
                     // Password mismatch warning
                     if showPasswordMismatch {
                         Text("Passwords don’t match")
@@ -150,33 +143,21 @@ struct SignUpView: View {
                             .padding(.top, -8)
                     }
 
-                    // Sign up button
+                    // Sign Up button
                     Button {
-//                        if password != confirmPassword {
-//                            showPasswordMismatch = true
-//                            shakeText()
-//                            return
-//                        }
-//                        
-//                        showPasswordMismatch = false
-//                        authVM.register(email: email, password: password) { success in
-//                            if success {
-//                                showVerificationAlert = true
-//                            }
-//                        }
                         guard !email.isEmpty, !password.isEmpty, !confirmPassword.isEmpty else {
-                            loginError = "Все поля должны быть заполнены"
+                            loginError = "All fields must be filled out"
                             return
                         }
                         guard password.count >= 6 else {
-                            loginError = "Пароль должен содердать минимум 6 символов"
+                            loginError = "Password must contain at least 6 characters"
                             return
                         }
                         guard password == confirmPassword else {
-                            loginError = "Пароли не совпадают"
+                            loginError = "Passwords do not match"
                             return
                         }
-                        
+
                         loginError = nil
                         authVM.register(email: email, password: password) { success in
                             if success {
@@ -193,17 +174,18 @@ struct SignUpView: View {
                                                           startPoint: .top,
                                                           endPoint: .bottomTrailing))
                             )
-                                .foregroundColor(.white)
+                            .foregroundColor(.white)
                     }
                     .alert(isPresented: $showVerificationAlert) {
                         Alert(
-                            title: Text("Проверьте почту"),
-                            message: Text("Мы отправили письмо для подтверждения регистрации на \(email). Подтвердите адрес, чтобы войти в приложение."),
+                            title: Text("Check your email"),
+                            message: Text("We’ve sent a verification link to \(email). Please confirm your address to sign in."),
                             dismissButton: .default(Text("OK")) {
                                 presentationMode.wrappedValue.dismiss()
                             }
                         )
                     }
+
                     if let loginError = loginError {
                         Text(loginError)
                             .foregroundColor(.red)
@@ -212,16 +194,16 @@ struct SignUpView: View {
                             .padding(.top, 4)
                     }
 
-                    // Switch to login
+                    // Switch to Sign In
                     HStack {
                         Text("Already have an account?")
                             .foregroundColor(.white)
                         Button {
                             dismiss()
                         } label: {
-                                Text("Sign In")
-                                    .foregroundColor(.blue)
-                                    .bold()
+                            Text("Sign In")
+                                .foregroundColor(.blue)
+                                .bold()
                         }
                     }
                     .padding(.top)
@@ -250,7 +232,6 @@ struct SignUpView: View {
         }
     }
 }
-
 
 struct SignUpView_Previews: PreviewProvider {
     static var previews: some View {

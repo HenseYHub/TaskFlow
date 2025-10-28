@@ -9,30 +9,30 @@ struct ProjectInfoSheetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Капсула для свайпа
+            // Drag indicator capsule
             Capsule()
                 .frame(width: 40, height: 5)
                 .foregroundColor(.white.opacity(0.4))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 8)
 
-            // Название
+            // Title
             Text(title)
                 .font(.title2.bold())
                 .foregroundColor(.white)
 
-            // Описание, если есть
+            // Description (if present)
             if !description.isEmpty {
                 Text(description)
                     .foregroundColor(.white)
             }
 
-            // Дата
-            Text("Дата: \(formattedDate(date))")
+            // Date
+            Text("Date: \(formattedDate(date))")
                 .foregroundColor(.white.opacity(0.9))
 
-            // Время
-            Text("Час: \(formattedTime(startTime)) – \(formattedTime(endTime))")
+            // Time range
+            Text("Time: \(formattedTime(startTime)) – \(formattedTime(endTime))")
                 .foregroundColor(.white.opacity(0.9))
 
             Spacer()
@@ -60,8 +60,8 @@ struct ProjectInfoSheetView: View {
 
 #Preview {
     ProjectInfoSheetView(
-        title: "Учёба (Swift)",
-        description: "Прохожу SwiftUI",
+        title: "Study (Swift)",
+        description: "Learning SwiftUI",
         date: Date(),
         startTime: Date(),
         endTime: Calendar.current.date(byAdding: .minute, value: 60, to: Date()) ?? Date()

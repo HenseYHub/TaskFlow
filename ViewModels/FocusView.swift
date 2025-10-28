@@ -1,7 +1,7 @@
 import SwiftUI
 import UserNotifications
 
-// MARK: - Таймер без Timer (устойчивый, без concurrency warning)
+// MARK: - Таймер без Timer (устойчивый)
 
 @MainActor
 final class FocusTimer: ObservableObject {
@@ -50,9 +50,7 @@ final class FocusTimer: ObservableObject {
         tickerTask = Task { [weak self] in
             guard let self else { return }
             while true {
-                // спим 1 сек
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
-                // повторная проверка ПОСЛЕ сна — чтобы не уходить в -1 при reset
                 if Task.isCancelled { break }
                 if self.secondsLeft <= 0 { break }
                 self.secondsLeft -= 1
@@ -73,9 +71,9 @@ final class FocusTimer: ObservableObject {
 // MARK: - Фазы
 
 enum FocusPhase: String, CaseIterable {
-    case focus      = "Focus"
-    case shortBreak = "Break 5"
-    case longBreak  = "Break 15"
+    case focus
+    case shortBreak
+    case longBreak
 }
 
 // MARK: - Focus View
@@ -114,8 +112,10 @@ struct FocusView: View {
     private var isResumeState: Bool {
         !timer.isRunning && timer.secondsLeft > 0 && timer.secondsLeft != currentMinutes * 60
     }
+
     private var primaryButtonTitle: String {
-        timer.isRunning ? "Pause" : (isResumeState ? "Resume" : "Start")
+        if timer.isRunning { return String(localized: "pause") }
+        return isResumeState ? String(localized: "resume") : String(localized: "start")
     }
     private var primaryButtonIcon: String {
         timer.isRunning ? "pause.fill" : "play.fill"
@@ -133,7 +133,7 @@ struct FocusView: View {
             Spacer()
 
             if selectedTask == nil && !todayTasks.isEmpty {
-                Text("Tip: select a task to set Focus duration.")
+                Text("tip_select_task")
                     .font(.footnote).foregroundColor(.gray).padding(.bottom, 8)
             }
         }
@@ -143,7 +143,6 @@ struct FocusView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
-        // iOS 17 onChange (двухпараметрическая форма)
         .onChange(of: selectedTask, initial: false) { _, _ in
             if phase == .focus && !timer.isRunning {
                 timer.reset()
@@ -166,7 +165,7 @@ struct FocusView: View {
     private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Focus").font(.title.bold()).foregroundColor(.white)
+                Text("focus_title").font(.title.bold()).foregroundColor(.white)
                 Text(Date(), style: .date).foregroundColor(.gray)
             }
             Spacer()
@@ -178,8 +177,8 @@ struct FocusView: View {
         Button { showingTaskPicker = true } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Current task").font(.caption).foregroundColor(.gray)
-                    Text(selectedTask?.name ?? "Select a task")
+                    Text("current_task").font(.caption).foregroundColor(.gray)
+                    Text(selectedTask?.name ?? String(localized: "select_a_task"))
                         .font(.headline).foregroundColor(.white).lineLimit(2)
                 }
                 Spacer()
@@ -194,13 +193,18 @@ struct FocusView: View {
 
     private var presetsRow: some View {
         HStack(spacing: 10) {
-            presetButton(title: "Focus • \(focusMinutes)m", isActive: phase == .focus) {
+            // "Focus • {minutes}m"
+            presetButton(
+                title: "\(String(localized: "focus_title")) • \(focusMinutes)\(String(localized: "minutes_short"))",
+                isActive: phase == .focus
+            ) {
                 phase = .focus; if !timer.isRunning { timer.reset() }
             }
-            presetButton(title: "Break 5", isActive: phase == .shortBreak) {
+
+            presetButton(title: String(localized: "break_5"), isActive: phase == .shortBreak) {
                 phase = .shortBreak; if !timer.isRunning { timer.reset() }
             }
-            presetButton(title: "Break 15", isActive: phase == .longBreak) {
+            presetButton(title: String(localized: "break_15"), isActive: phase == .longBreak) {
                 phase = .longBreak; if !timer.isRunning { timer.reset() }
             }
         }
@@ -263,7 +267,7 @@ struct FocusView: View {
                     UIApplication.shared.isIdleTimerDisabled = false
                     cancelScheduledCompletion()
                 } label: {
-                    Label("Reset", systemImage: "arrow.counterclockwise")
+                    Label(String(localized: "reset"), systemImage: "arrow.counterclockwise")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color.white.opacity(0.08))
@@ -285,7 +289,7 @@ struct FocusView: View {
     }
 
     private func timeString(_ seconds: Int) -> String {
-        let clamped = max(0, seconds) // защита от -1
+        let clamped = max(0, seconds)
         let m = clamped / 60, s = clamped % 60
         return String(format: "%02d:%02d", m, s)
     }
@@ -302,7 +306,7 @@ private struct TaskPickerSheet: View {
         NavigationStack {
             List {
                 if todayTasks.isEmpty {
-                    Text("Немає задач на сьогодні")
+                    Text("no_tasks_today")
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity, alignment: .center)
                 } else {
@@ -314,7 +318,7 @@ private struct TaskPickerSheet: View {
                                     Text("\(fmt(s))–\(fmt(e))")
                                         .font(.caption).foregroundColor(.gray)
                                 }
-                                Text("\(task.durationInMinutes) min")
+                                Text("\(task.durationInMinutes) \(String(localized: "min_short"))")
                                     .font(.caption2)
                                     .foregroundColor(.gray)
                             }
@@ -328,10 +332,10 @@ private struct TaskPickerSheet: View {
                     }
                 }
             }
-            .navigationTitle("Select task")
+            .navigationTitle(String(localized: "select_task_title"))
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) { Button("Clear") { selected = nil } }
-                ToolbarItem(placement: .topBarTrailing) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .topBarLeading) { Button(String(localized: "clear")) { selected = nil } }
+                ToolbarItem(placement: .topBarTrailing) { Button(String(localized: "done")) { dismiss() } }
             }
         }
     }
@@ -353,8 +357,8 @@ private func requestNotificationsIfNeeded() {
 
 private func scheduleCompletionNotification(in seconds: Int) {
     let c = UNMutableNotificationContent()
-    c.title = "Time's up"
-    c.body  = "Focus session complete."
+    c.title = String(localized: "notif_times_up")
+    c.body  = String(localized: "notif_focus_complete")
     c.sound = .default
     let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(seconds), repeats: false)
     let req = UNNotificationRequest(identifier: "focus-complete", content: c, trigger: trigger)

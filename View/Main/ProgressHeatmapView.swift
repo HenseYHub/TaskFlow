@@ -232,7 +232,7 @@ struct WeeklyBarChartView: View {
                                     y: .value("Completed", min(item.count, 5))
                                 )
                                 .annotation(position: .top) {
-                                    Text("Выполнено: \(item.count)")
+                                    Text("Done: \(item.count)")
                                         .font(.caption2)
                                         .foregroundColor(.white)
                                         .padding(5)
@@ -278,7 +278,7 @@ struct WeeklyBarChartView: View {
             Button(action: {
                 dismiss()
             }) {
-                Text("Вернуться")
+                Text("Return")
                     .font(.headline)
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
