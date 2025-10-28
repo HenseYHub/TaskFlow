@@ -1,26 +1,19 @@
-# ===== Xcode =====
 DerivedData/
 build/
-*.xcworkspace/xcshareddata/WorkspaceSettings.xcsettings
-xcuserdata/
+*.xcuserstate
 *.xccheckout
-*.moved-aside
-
-# ===== Swift Package Manager =====
-.swiftpm/
-Packages/
-Package.resolved
-
-# ===== CocoaPods =====
+*.xcscmblueprint
+*.xcworkspace/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+# SwiftPM
+.build/
+# CocoaPods
 Pods/
-
-# ===== Logs & Cache =====
-*.log
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+# Carthage
+Carthage/Build/
+# misc
 .DS_Store
-
-# ===== Firebase =====
-GoogleService-Info.plist
-
-# ===== Others =====
-*.swp
-*.swo
