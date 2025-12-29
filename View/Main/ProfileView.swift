@@ -20,45 +20,47 @@ struct ProfileView: View {
     @State private var showLogoutAlert = false
 
     var body: some View {
-        ZStack(alignment: .top) {
-            AppColorPalette.background.ignoresSafeArea()
+        NavigationStack {
+            ZStack(alignment: .top) {
+                AppColorPalette.background.ignoresSafeArea()
 
-            ScrollView {
-                VStack(spacing: 16) {
-                    headerView()
-                    avatarView()
-                    nameRoleView()
-                    statsView()
-                    optionsView()
-                        .padding(.top)
-                        .padding(.bottom, 80)
+                ScrollView {
+                    VStack(spacing: 16) {
+                        headerView()
+                        avatarView()
+                        nameRoleView()
+                        statsView()
+                        optionsView()
+                            .padding(.top)
+                            .padding(.bottom, 80)
+                    }
+                    .padding()
                 }
-                .padding()
             }
-        }
-        // экран редактирования профиля
-        .sheet(isPresented: $isEditingProfile) {
-            EditProfileSheet()
-                .environmentObject(userProfile)
-                .presentationDetents([.height(320)])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(.regularMaterial)
-                .presentationCornerRadius(24)
-        }
-        // лист смены пароля
-        .sheet(isPresented: $showChangePasswordSheet) {
-            ChangePasswordSheet()
-                .presentationDetents([.height(420)])
-                .presentationDragIndicator(.visible)
-        }
-        // пикер аватара
-        .sheet(isPresented: $isShowingImagePicker) {
-            LegacyImagePicker(image: $profileImage)
-                .ignoresSafeArea()
-        }
-        .onAppear { loadSavedAvatar() }
-        .onChange(of: isShowingImagePicker, initial: false) { _, isOpen in
-            if !isOpen { saveAvatarIfNeeded() }
+            // экран редактирования профиля
+            .sheet(isPresented: $isEditingProfile) {
+                EditProfileSheet()
+                    .environmentObject(userProfile)
+                    .presentationDetents([.height(320)])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(.regularMaterial)
+                    .presentationCornerRadius(24)
+            }
+            // лист смены пароля
+            .sheet(isPresented: $showChangePasswordSheet) {
+                ChangePasswordSheet()
+                    .presentationDetents([.height(420)])
+                    .presentationDragIndicator(.visible)
+            }
+            // пикер аватара
+            .sheet(isPresented: $isShowingImagePicker) {
+                LegacyImagePicker(image: $profileImage)
+                    .ignoresSafeArea()
+            }
+            .onAppear { loadSavedAvatar() }
+            .onChange(of: isShowingImagePicker, initial: false) { _, isOpen in
+                if !isOpen { saveAvatarIfNeeded() }
+            }
         }
     }
 
@@ -118,15 +120,26 @@ struct ProfileView: View {
         let completed = taskVM.tasks.filter { $0.isCompleted }.count
 
         HStack {
-            VStack {
+            VStack(spacing: 2) {
+                Spacer(minLength: 6)
+
                 Text("\(completed)")
                     .font(.title2.bold())
                     .foregroundColor(.blue)
-                Text("task_completed") // Localized
-                    .font(.caption)
-                    .foregroundColor(.white)
+
+                Text("task_completed")
+                    .font(.caption2)
+                    .foregroundColor(.white.opacity(0.9))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .multilineTextAlignment(.center)
+                    .textCase(nil)
+
+                Spacer(minLength: 6)
             }
-            .frame(maxWidth: .infinity, minHeight: 60)
+            .frame(maxWidth: .infinity)
+            .frame(height: 64)
+            .padding(.horizontal, 4)
             .background(Color.white.opacity(0.06))
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
@@ -141,6 +154,15 @@ struct ProfileView: View {
 
             Button { showChangePasswordSheet = true } label: {
                 ProfileRow(icon: "lock.circle", titleKey: "change_password")
+            }
+
+            // ✅ All Tasks (открывает страницу)
+            NavigationLink {
+                AllTasksView()
+                    .environmentObject(taskVM)
+                    .environmentObject(projectVM)
+            } label: {
+                ProfileRow(icon: "checklist.checked", titleKey: "all_tasks")
             }
 
             Button { showProgressHeatmap = true } label: {
@@ -168,7 +190,6 @@ struct ProfileView: View {
         if let data = profileImageData, let img = UIImage(data: data) {
             profileImage = img
         } else if let data = userProfile.profile?.avatarJPEGData, let img = UIImage(data: data) {
-            // если ранее хранилось в модели — подтянем в @AppStorage
             profileImage = img
             profileImageData = data
         }
@@ -177,7 +198,7 @@ struct ProfileView: View {
     private func saveAvatarIfNeeded() {
         guard let img = profileImage,
               let data = img.jpegData(compressionQuality: 0.9) else { return }
-        // сохраняем и в @AppStorage, и в профиль
+
         profileImageData = data
         if userProfile.profile != nil {
             userProfile.profile?.avatarJPEGData = data
@@ -198,7 +219,9 @@ struct LegacyImagePicker: UIViewControllerRepresentable {
         picker.allowsEditing = true
         return picker
     }
+
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
     final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
@@ -219,7 +242,8 @@ struct LegacyImagePicker: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - Row (принимает локализованный ключ)
+// MARK: - Row
+
 struct ProfileRow: View {
     var icon: String
     var titleKey: LocalizedStringKey
@@ -233,7 +257,7 @@ struct ProfileRow: View {
                 .background(color)
                 .clipShape(RoundedRectangle(cornerRadius: 15))
 
-            Text(titleKey) // Localized
+            Text(titleKey)
                 .foregroundColor(color == .red ? .red : .white)
 
             Spacer()

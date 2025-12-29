@@ -12,10 +12,26 @@
             "value" : "-"
           }
         },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "-"
+          }
+        },
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "-"
+          }
+        }
+      }
+    },
+    "%@ (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ (%2$lld)"
           }
         }
       }
@@ -64,24 +80,24 @@
         }
       }
     },
-    "%lld %@" : {
+    "%lld " : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld %2$@ "
+            "state" : "needs_review",
+            "value" : "%lld "
           }
         },
         "en" : {
           "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld %2$@"
+            "state" : "translated",
+            "value" : "%lld"
           }
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld %2$@"
+            "state" : "needs_review",
+            "value" : "%lld "
           }
         }
       }
@@ -91,7 +107,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld min"
+            "value" : "%lldmin"
           }
         },
         "en" : {
@@ -103,7 +119,7 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld хв"
+            "value" : "%lld Хв"
           }
         }
       }
@@ -113,7 +129,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lldm  "
+            "value" : "%lldm"
           }
         },
         "en" : {
@@ -125,10 +141,13 @@
         "uk" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld ХВ"
+            "value" : "%lld Хв"
           }
         }
       }
+    },
+    "•" : {
+
     },
     "Add description…" : {
       "localizations" : {
@@ -148,6 +167,51 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Додайте опис..."
+          }
+        }
+      }
+    },
+    "all" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі"
+          }
+        }
+      }
+    },
+    "all_tasks" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Aufgaben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All Tasks"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Усі завдання"
           }
         }
       }
@@ -400,6 +464,72 @@
         }
       }
     },
+    "common_cancel" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stornieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скасувати"
+          }
+        }
+      }
+    },
+    "common_save" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Speichern"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зберегти"
+          }
+        }
+      }
+    },
+    "completed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erledigt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Completed"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Виконані"
+          }
+        }
+      }
+    },
     "Completed" : {
       "localizations" : {
         "de" : {
@@ -643,11 +773,11 @@
         }
       }
     },
-    "Delete" : {
+    "delete" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Löschen"
           }
         },
@@ -659,7 +789,7 @@
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Видалити"
           }
         }
@@ -759,7 +889,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dauer: %lld m"
+            "value" : "Dauer: %lldm"
           }
         },
         "en" : {
@@ -816,6 +946,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Редагувати проєкт"
+          }
+        }
+      }
+    },
+    "edit_task_title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bearbeiten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редагувати"
           }
         }
       }
@@ -908,6 +1060,29 @@
         }
       }
     },
+    "focus_preset_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fokus • %d Min"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus • %d min"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фокус • %d хв"
+          }
+        }
+      }
+    },
     "focus_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -974,6 +1149,32 @@
           }
         }
       }
+    },
+    "Key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schlüssel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Key"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ключ"
+          }
+        }
+      }
+    },
+    "Key 2" : {
+      "extractionState" : "manual"
     },
     "Log In" : {
       "localizations" : {
@@ -1065,7 +1266,8 @@
         }
       }
     },
-    "Mark as completed" : {
+    "mark_completed" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1075,7 +1277,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Mark as completed"
           }
         },
@@ -1087,7 +1289,8 @@
         }
       }
     },
-    "Marked as completed" : {
+    "marked_completed" : {
+      "extractionState" : "extracted_with_value",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -1097,7 +1300,7 @@
         },
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "new",
             "value" : "Marked as completed"
           }
         },
@@ -1115,7 +1318,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Min"
+            "value" : "min"
           }
         },
         "en" : {
@@ -1245,12 +1448,34 @@
         }
       }
     },
-    "No tasks for this day" : {
+    "no_completed_tasks" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keine Aufgaben für diesen Tag"
+            "value" : "Noch keine erledigten Aufgaben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No completed tasks yet"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки немає виконаних завдань"
+          }
+        }
+      }
+    },
+    "no_tasks_for_day" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Aufgaben für diesen Tag "
           }
         },
         "en" : {
@@ -1261,7 +1486,7 @@
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Немає завдань на цей день"
           }
         }
@@ -1286,6 +1511,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "На сьогодні немає завдань"
+          }
+        }
+      }
+    },
+    "no_tasks_yet" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch keine Aufgaben"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No tasks yet"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поки немає завдань"
           }
         }
       }
@@ -1474,7 +1721,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PROFIL"
+            "value" : "Profile\n"
           }
         },
         "en" : {
@@ -1497,7 +1744,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "PROFIL"
+            "value" : "Profile\n"
           }
         },
         "en" : {
@@ -1666,6 +1913,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Зберегти"
+          }
+        }
+      }
+    },
+    "search_tasks" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufgaben suchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search tasks"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пошук завдань"
           }
         }
       }
@@ -2097,7 +2366,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aufgaben erledigt"
+            "value" : "Erledigt"
           }
         },
         "en" : {
@@ -2110,6 +2379,207 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Завдань виконано"
+          }
+        }
+      }
+    },
+    "task_date_label" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дата"
+          }
+        }
+      }
+    },
+    "task_datetime_section_title" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Datum Uhrzeit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date Time"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дата Час"
+          }
+        }
+      }
+    },
+    "task_description_label" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschreibung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Description"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Опис"
+          }
+        }
+      }
+    },
+    "task_description_placeholder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beschreibung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Description"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Опис"
+          }
+        }
+      }
+    },
+    "task_name_label" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва"
+          }
+        }
+      }
+    },
+    "task_name_placeholder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Name"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назва"
+          }
+        }
+      }
+    },
+    "task_time_end_label" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ende"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кінець"
+          }
+        }
+      }
+    },
+    "task_time_section_label" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeit"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Час"
+          }
+        }
+      }
+    },
+    "task_time_start_label" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start"
+          }
+        },
+        "uk" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Початок"
           }
         }
       }
@@ -2203,11 +2673,11 @@
         }
       }
     },
-    "Today" : {
+    "today_title" : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Heute"
           }
         },
@@ -2219,7 +2689,7 @@
         },
         "uk" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Сьогодні"
           }
         }

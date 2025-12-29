@@ -22,6 +22,7 @@ struct SettingsView: View {
                 }
             }
 
+
             Section(header: Text(LocalizedStringKey("settings_privacy_header"))) {
                 NavigationLink(LocalizedStringKey("settings_data_manage")) {
                     Text(LocalizedStringKey("settings_data_placeholder"))
