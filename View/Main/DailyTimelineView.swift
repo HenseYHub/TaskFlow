@@ -1,12 +1,12 @@
 import SwiftUI
+import UIKit
 
 struct DailyTimelineView: View {
     @EnvironmentObject var taskViewModel: TaskViewModel
     @EnvironmentObject var userProfile: UserProfileModel
     @EnvironmentObject var projectViewModel: ProjectViewModel
-    @AppStorage("profileImageData") private var profileImageData: Data?
     @Environment(\.locale) private var locale
-    
+
     // MARK: - Edit sheet state
     @State private var editingTask: TaskModel?
     @State private var tempDate: Date = Date()
@@ -55,24 +55,8 @@ struct DailyTimelineView: View {
 
                     Spacer()
 
-                    if let data = profileImageData,
-                       let ui = UIImage(data: data) {
-                        Image(uiImage: ui)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 44, height: 44)
-                            .clipShape(Circle())
-                            .overlay(
-                                Circle()
-                                    .stroke(.white.opacity(0.08), lineWidth: 1)
-                            )
-                    } else {
-                        Image(systemName: "person.crop.circle.fill")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 44, height: 44)
-                            .foregroundColor(.gray)
-                    }
+                    // ✅ AVATAR from userProfile.profile (current account)
+                    avatarView44
                 }
                 .padding(.horizontal)
 
@@ -81,11 +65,7 @@ struct DailyTimelineView: View {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(0..<14) { offset in
-                                let date = Calendar.current.date(
-                                    byAdding: .day,
-                                    value: offset - 7,
-                                    to: Date()
-                                ) ?? Date()
+                                let date = Calendar.current.date(byAdding: .day, value: offset - 7, to: Date()) ?? Date()
                                 let isSelected = Calendar.current.isDate(date, inSameDayAs: selectedDate)
 
                                 VStack(spacing: 6) {
@@ -150,7 +130,6 @@ struct DailyTimelineView: View {
                                 }
                             } label: {
                                 Label("Tomorrow", systemImage: "arrow.right.circle")
-
                             }
                         }
                         // swipe LEFT → delete
@@ -200,10 +179,31 @@ struct DailyTimelineView: View {
                     .presentationBackground(AppColorPalette.background)
             }
         }
+        // ✅ если профиль изменился — перерисуем хедер точно
+        .id((userProfile.profile?.avatarJPEGData?.hashValue ?? 0) ^ (userProfile.profile?.nickname.hashValue ?? 0))
+    }
+
+    // MARK: - Avatar view (44x44)
+    private var avatarView44: some View {
+        Group {
+            if let data = userProfile.profile?.avatarJPEGData,
+               let ui = UIImage(data: data) {
+                Image(uiImage: ui)
+                    .resizable()
+                    .scaledToFill()
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .foregroundColor(.gray)
+            }
+        }
+        .frame(width: 44, height: 44)
+        .clipShape(Circle())
+        .overlay(Circle().stroke(.white.opacity(0.08), lineWidth: 1))
     }
 
     // MARK: - Editor logic
-
     private func openEditor(for task: TaskModel) {
         editingTask = task
 
@@ -217,21 +217,19 @@ struct DailyTimelineView: View {
 
         tempName = task.name
         tempComment = task.comment ?? ""
-        
-        // при открытии редактора прячем только календарь
+
         showDatePickerInline = false
     }
 
     @ViewBuilder
     private func editPanel(task: TaskModel) -> some View {
+        // оставил как у тебя — без изменений
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
-                // маленький “хэндл”
                 Capsule()
                     .frame(width: 40, height: 4)
                     .foregroundColor(.gray.opacity(0.08))
 
-                // HEADER
                 HStack {
                     Text("edit_task_title")
                         .font(.headline)
@@ -239,21 +237,15 @@ struct DailyTimelineView: View {
 
                     Spacer()
 
-                    Button {
-                        editingTask = nil
-                    } label: {
+                    Button { editingTask = nil } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.gray)
                             .padding(6)
-                            .background(
-                                Circle()
-                                    .fill(Color.white.opacity(0.06))
-                            )
+                            .background(Circle().fill(Color.white.opacity(0.06)))
                     }
                 }
 
-                // NAME + COMMENT CARD
                 VStack(alignment: .leading, spacing: 10) {
                     Text("task_name_label")
                         .font(.caption)
@@ -263,38 +255,24 @@ struct DailyTimelineView: View {
                         .textFieldStyle(.plain)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white.opacity(0.06))
-                        )
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.06)))
                         .foregroundColor(.white)
 
                     Text("task_description_label")
                         .font(.caption)
                         .foregroundColor(.gray)
 
-                    TextField(
-                        "task_description_placeholder",
-                        text: $tempComment,
-                        axis: .vertical
-                    )
-                    .textFieldStyle(.plain)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.white.opacity(0.06))
-                    )
-                    .foregroundColor(.white)
-                    .lineLimit(2...4)
+                    TextField("task_description_placeholder", text: $tempComment, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.06)))
+                        .foregroundColor(.white)
+                        .lineLimit(2...4)
                 }
                 .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.white.opacity(0.03))
-                )
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.03)))
 
-                // DATE + TIME CARD
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Text("task_datetime_section_title")
@@ -308,91 +286,59 @@ struct DailyTimelineView: View {
                             .foregroundColor(.gray)
                     }
 
-                    // DATE (chip + icon)
                     HStack(spacing: 12) {
                         Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showDatePickerInline.toggle()
-                            }
+                            withAnimation(.easeInOut(duration: 0.2)) { showDatePickerInline.toggle() }
                         } label: {
                             Text(formattedChipDate(tempDate))
                                 .font(.subheadline)
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.white.opacity(0.10))
-                                )
+                                .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.10)))
                         }
 
                         Spacer(minLength: 0)
 
                         Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                showDatePickerInline.toggle()
-                            }
+                            withAnimation(.easeInOut(duration: 0.2)) { showDatePickerInline.toggle() }
                         } label: {
                             Image(systemName: "calendar")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.white)
                                 .padding(8)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .stroke(Color.white.opacity(0.18))
-                                )
+                                .background(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.18)))
                         }
                     }
 
                     if showDatePickerInline {
-                        DatePicker(
-                            "",
-                            selection: $tempDate,
-                            displayedComponents: [.date]
-                        )
-                        .labelsHidden()
-                        .datePickerStyle(.graphical)
-                        .tint(.white)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.white.opacity(0.04))
-                        )
-                        .transition(.opacity)
+                        DatePicker("", selection: $tempDate, displayedComponents: [.date])
+                            .labelsHidden()
+                            .datePickerStyle(.graphical)
+                            .tint(.white)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.04)))
+                            .transition(.opacity)
                     }
 
-                    Divider()
-                        .overlay(Color.white.opacity(0.12))
+                    Divider().overlay(Color.white.opacity(0.12))
 
-                    // TIME – как в CreateNewTaskView: два ползунка рядом
                     VStack(alignment: .leading, spacing: 8) {
                         Text("task_time_section_label")
                             .font(.caption)
                             .foregroundColor(.gray)
 
                         HStack(spacing: 16) {
-                            // START
-                            DatePicker(
-                                "",
-                                selection: $tempStartTime,
-                                displayedComponents: .hourAndMinute
-                            )
-                            .labelsHidden()
-                            .colorMultiply(.white)
-                            .preferredColorScheme(.dark)
+                            DatePicker("", selection: $tempStartTime, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                                .colorMultiply(.white)
+                                .preferredColorScheme(.dark)
 
-                            Text("-")
-                                .foregroundColor(.white)
+                            Text("-").foregroundColor(.white)
 
-                            // END (не раньше старта и до конца дня)
-                            DatePicker(
-                                "",
-                                selection: $tempEndTime,
-                                in: tempStartTime...endOfEditDay(),
-                                displayedComponents: .hourAndMinute
-                            )
-                            .labelsHidden()
-                            .colorMultiply(.white)
-                            .preferredColorScheme(.dark)
+                            DatePicker("", selection: $tempEndTime, in: tempStartTime...endOfEditDay(), displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                                .colorMultiply(.white)
+                                .preferredColorScheme(.dark)
 
                             Spacer(minLength: 0)
 
@@ -403,44 +349,23 @@ struct DailyTimelineView: View {
                     }
                 }
                 .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.white.opacity(0.03))
-                )
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.03)))
 
-                // BUTTONS
                 HStack(spacing: 12) {
-                    Button("common_cancel") {
-                        editingTask = nil
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.white.opacity(0.06))
-                    )
-                    .foregroundColor(.white)
+                    Button("common_cancel") { editingTask = nil }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.06)))
+                        .foregroundColor(.white)
 
                     Button("common_save") {
-                        taskViewModel.updateTaskTime(
-                            task: task,
-                            newDate: tempDate,
-                            newStart: tempStartTime,
-                            newEnd: tempEndTime
-                        )
-                        taskViewModel.updateTaskMeta(
-                            task,
-                            name: tempName,
-                            comment: tempComment.isEmpty ? nil : tempComment
-                        )
+                        taskViewModel.updateTaskTime(task: task, newDate: tempDate, newStart: tempStartTime, newEnd: tempEndTime)
+                        taskViewModel.updateTaskMeta(task, name: tempName, comment: tempComment.isEmpty ? nil : tempComment)
                         editingTask = nil
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.white.opacity(0.18))
-                    )
+                    .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.18)))
                     .foregroundColor(.white)
                 }
                 .padding(.top, 4)
@@ -449,18 +374,14 @@ struct DailyTimelineView: View {
             .padding(.top, 12)
             .padding(.bottom, 16)
         }
-        // следим, чтобы endTime не уезжал раньше старта и не выходил за конец дня
         .onChange(of: tempStartTime) { _ in clampEditEndTime() }
         .onChange(of: tempDate) { _ in clampEditEndTime() }
         .onChange(of: tempEndTime) { _ in clampEditEndTime() }
     }
 
-    // MARK: Helpers (locale-aware + time helpers)
-
+    // MARK: Helpers
     private func hasTasks(on date: Date) -> Bool {
-        taskViewModel.tasks.contains {
-            Calendar.current.isDate($0.date ?? Date(), inSameDayAs: date)
-        }
+        taskViewModel.tasks.contains { Calendar.current.isDate($0.date ?? Date(), inSameDayAs: date) }
     }
 
     private func dayNumber(_ date: Date) -> String {
@@ -477,94 +398,41 @@ struct DailyTimelineView: View {
     }
 
     private func localizedFullDate(_ date: Date) -> String {
-        date.formatted(
-            .dateTime.month(.wide).day().year().locale(locale)
-        )
+        date.formatted(.dateTime.month(.wide).day().year().locale(locale))
     }
 
     private func localizedWeekdayWide(_ date: Date) -> String {
-        date.formatted(
-            .dateTime.weekday(.wide).locale(locale)
-        )
+        date.formatted(.dateTime.weekday(.wide).locale(locale))
     }
 
     private func localizedShortWeekdaySymbols(for locale: Locale) -> [String] {
         let df = DateFormatter()
         df.locale = locale
-
-        if let syms = df.shortWeekdaySymbols, !syms.isEmpty {
-            return syms
-        }
-        if let full = df.weekdaySymbols, !full.isEmpty {
-            return full
-        }
+        if let syms = df.shortWeekdaySymbols, !syms.isEmpty { return syms }
+        if let full = df.weekdaySymbols, !full.isEmpty { return full }
         return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     }
-    
+
     private func formattedChipDate(_ date: Date) -> String {
-        date.formatted(
-            .dateTime.day().month().year().locale(locale)
-        )
-    }
-    
-    private func formattedChipTime(_ date: Date) -> String {
-        date.formatted(
-            .dateTime.hour().minute().locale(locale)
-        )
+        date.formatted(.dateTime.day().month().year().locale(locale))
     }
 
-    // конец дня для редактируемой даты
     private func endOfEditDay() -> Date {
         let cal = Calendar.current
-        return cal.date(
-            bySettingHour: 23,
-            minute: 59,
-            second: 0,
-            of: tempDate
-        ) ?? tempDate
+        return cal.date(bySettingHour: 23, minute: 59, second: 0, of: tempDate) ?? tempDate
     }
 
-    // не даём endTime стать раньше startTime и позже конца дня
     private func clampEditEndTime() {
         let cal = Calendar.current
-
         if tempEndTime < tempStartTime {
-            tempEndTime = cal.date(
-                byAdding: .minute,
-                value: 30,
-                to: tempStartTime
-            ) ?? tempStartTime
+            tempEndTime = cal.date(byAdding: .minute, value: 30, to: tempStartTime) ?? tempStartTime
         }
-
         let endDay = endOfEditDay()
-        if tempEndTime > endDay {
-            tempEndTime = endDay
-        }
+        if tempEndTime > endDay { tempEndTime = endDay }
     }
 }
 
-#if DEBUG
-#Preview {
-    let profile = UserProfileModel()
-    profile.profile = UserProfile(
-        id: "preview",
-        fullName: "Pasha",
-        nickname: "pavlo.dev",
-        profession: "iOS Dev",
-        email: "p@example.com",
-        avatarJPEGData: nil
-    )
-
-    return DailyTimelineView()
-        .environmentObject(TaskViewModel())
-        .environmentObject(profile)
-        .environmentObject(ProjectViewModel())
-        .environment(\.locale, Locale(identifier: "en"))
-}
-#endif
-
-// MARK: - Hybrid row (left date rail + task card)
-
+// MARK: - Hybrid row
 private struct HybridTaskRow: View {
     @Environment(\.locale) private var locale
     let task: TaskModel
@@ -572,7 +440,6 @@ private struct HybridTaskRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Left date rail
             VStack(alignment: .leading, spacing: 2) {
                 Text(weekdayShort(task.date))
                     .font(.caption2)
@@ -583,7 +450,6 @@ private struct HybridTaskRow: View {
             }
             .frame(width: 46, alignment: .leading)
 
-            // Card
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(task.name)
@@ -610,10 +476,8 @@ private struct HybridTaskRow: View {
                 Button(action: onToggle) {
                     Label(
                         task.isCompleted
-                        ? String(localized: "marked_completed",
-                                 defaultValue: "Marked as completed")
-                        : String(localized: "mark_completed",
-                                 defaultValue: "Mark as completed"),
+                        ? String(localized: "marked_completed", defaultValue: "Marked as completed")
+                        : String(localized: "mark_completed", defaultValue: "Mark as completed"),
                         systemImage: task.isCompleted ? "checkmark.square.fill" : "square"
                     )
                     .font(.footnote)
@@ -622,19 +486,12 @@ private struct HybridTaskRow: View {
                 .padding(.top, 4)
             }
             .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.white.opacity(0.06))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.white.opacity(0.08))
-            )
+            .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.06)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.08)))
         }
         .contentShape(Rectangle())
     }
 
-    // local helpers (locale-aware)
     private func dayNumber(_ date: Date?) -> String {
         (date ?? Date()).formatted(.dateTime.day().locale(locale))
     }
@@ -656,18 +513,13 @@ private struct HybridTaskRow: View {
     private func localizedShortWeekdaySymbols(for locale: Locale) -> [String] {
         let df = DateFormatter()
         df.locale = locale
-        if let syms = df.shortWeekdaySymbols, !syms.isEmpty {
-            return syms
-        }
-        if let full = df.weekdaySymbols, !full.isEmpty {
-            return full
-        }
+        if let syms = df.shortWeekdaySymbols, !syms.isEmpty { return syms }
+        if let full = df.weekdaySymbols, !full.isEmpty { return full }
         return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     }
 }
 
-// MARK: - ViewModel helpers for swipe actions
-
+// MARK: - TaskViewModel helpers
 extension TaskViewModel {
     func deleteTask(_ task: TaskModel) {
         if let idx = tasks.firstIndex(where: { $0.id == task.id }) {
@@ -695,3 +547,23 @@ extension TaskViewModel {
         }
     }
 }
+
+#if DEBUG
+#Preview {
+    let profile = UserProfileModel()
+    profile.profile = UserProfile(
+        id: "preview",
+        fullName: "Pasha",
+        nickname: "pavlo.dev",
+        profession: "iOS Dev",
+        email: "p@example.com",
+        avatarJPEGData: nil
+    )
+
+    return DailyTimelineView()
+        .environmentObject(TaskViewModel())
+        .environmentObject(profile)
+        .environmentObject(ProjectViewModel())
+        .environment(\.locale, Locale(identifier: "en"))
+}
+#endif

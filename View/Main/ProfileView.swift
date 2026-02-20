@@ -2,18 +2,16 @@ import SwiftUI
 import UIKit
 
 struct ProfileView: View {
-    @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var taskVM: TaskViewModel
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var userProfile: UserProfileModel
     @EnvironmentObject var projectVM: ProjectViewModel
 
-    // Аватар (persist)
+    // ✅ Avatar stored per UID
     @State private var profileImage: UIImage?
-    @AppStorage("profileImageData") private var profileImageData: Data?
     @State private var isShowingImagePicker = false
 
-    // Навигация/состояния
+    // UI state
     @State private var isEditingProfile = false
     @State private var showChangePasswordSheet = false
     @State private var showProgressHeatmap = false
@@ -37,27 +35,28 @@ struct ProfileView: View {
                     .padding()
                 }
             }
-            // экран редактирования профиля
             .sheet(isPresented: $isEditingProfile) {
                 EditProfileSheet()
                     .environmentObject(userProfile)
+                    .environmentObject(authVM) // ✅ важно, если sheet использует authVM.userId
                     .presentationDetents([.height(320)])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(.regularMaterial)
                     .presentationCornerRadius(24)
             }
-            // лист смены пароля
             .sheet(isPresented: $showChangePasswordSheet) {
                 ChangePasswordSheet()
                     .presentationDetents([.height(420)])
                     .presentationDragIndicator(.visible)
             }
-            // пикер аватара
             .sheet(isPresented: $isShowingImagePicker) {
                 LegacyImagePicker(image: $profileImage)
                     .ignoresSafeArea()
             }
-            .onAppear { loadSavedAvatar() }
+            .onAppear { reloadForCurrentUser() }
+            .onChange(of: authVM.userId) { _, _ in
+                reloadForCurrentUser()
+            }
             .onChange(of: isShowingImagePicker, initial: false) { _, isOpen in
                 if !isOpen { saveAvatarIfNeeded() }
             }
@@ -70,7 +69,7 @@ struct ProfileView: View {
     private func headerView() -> some View {
         HStack {
             Spacer()
-            Text("profile_title") // Localized
+            Text("profile_title")
                 .font(.title2.bold())
                 .foregroundColor(.white)
             Spacer()
@@ -96,21 +95,27 @@ struct ProfileView: View {
         .frame(width: 120, height: 120)
         .background(Color.white.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 24))
-        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.5), lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+        )
         .onTapGesture { isShowingImagePicker = true }
         .accessibilityLabel(Text("avatar_accessibility"))
     }
 
     @ViewBuilder
     private func nameRoleView() -> some View {
-        let p = userProfile.profile
-        let displayName = (p?.nickname.isEmpty == false ? (p?.nickname ?? "")
-                          : (p?.fullName ?? "—"))
+        let nick = (loadNickname() ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // ✅ ВАЖНО: НЕ fallback на fullName, иначе будут "залипать" старые данные
+        let displayName = nick.isEmpty ? "—" : nick
+
         VStack(spacing: 4) {
             Text(displayName)
                 .font(.title.bold())
                 .foregroundColor(.white)
-            Text(p?.profession ?? "")
+
+            Text(userProfile.profile?.profession ?? "")
                 .foregroundColor(.gray)
         }
     }
@@ -133,7 +138,6 @@ struct ProfileView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
                     .multilineTextAlignment(.center)
-                    .textCase(nil)
 
                 Spacer(minLength: 6)
             }
@@ -152,11 +156,6 @@ struct ProfileView: View {
                 ProfileRow(icon: "person.circle", titleKey: "my_account")
             }
 
-            Button { showChangePasswordSheet = true } label: {
-                ProfileRow(icon: "lock.circle", titleKey: "change_password")
-            }
-
-            // ✅ All Tasks (открывает страницу)
             NavigationLink {
                 AllTasksView()
                     .environmentObject(taskVM)
@@ -184,29 +183,70 @@ struct ProfileView: View {
         }
     }
 
-    // MARK: - Avatar persist
+    // MARK: - Persist (per UID)
+
+    private func currentUID() -> String? { authVM.userId }
+
+    private func avatarKey(for uid: String) -> String { "profileImageData_\(uid)" }
+    private func nicknameKey(for uid: String) -> String { "profileNickname_\(uid)" }
+
+    private func reloadForCurrentUser() {
+        // ✅ сбрасываем UI
+        profileImage = nil
+
+        // ✅ создаём/сбрасываем профиль под текущий UID, чтобы не тянуть старые данные
+        if let uid = currentUID() {
+            userProfile.profile = UserProfile(
+                id: uid,
+                fullName: "",      // если потом нужно — тоже сохраняй по uid
+                nickname: "",      // nickname берём из UserDefaults по uid
+                profession: "",
+                email: "",
+                avatarJPEGData: nil
+            )
+        } else {
+            userProfile.profile = nil
+        }
+
+        loadSavedAvatar()
+    }
 
     private func loadSavedAvatar() {
-        if let data = profileImageData, let img = UIImage(data: data) {
+        guard let uid = currentUID() else {
+            profileImage = nil
+            userProfile.profile?.avatarJPEGData = nil
+            return
+        }
+
+        if let data = UserDefaults.standard.data(forKey: avatarKey(for: uid)),
+           let img = UIImage(data: data) {
             profileImage = img
-        } else if let data = userProfile.profile?.avatarJPEGData, let img = UIImage(data: data) {
-            profileImage = img
-            profileImageData = data
+            userProfile.profile?.avatarJPEGData = data
+            userProfile.objectWillChange.send()
+        } else {
+            profileImage = nil
+            userProfile.profile?.avatarJPEGData = nil
+            userProfile.objectWillChange.send()
         }
     }
 
     private func saveAvatarIfNeeded() {
+        guard let uid = currentUID() else { return }
         guard let img = profileImage,
               let data = img.jpegData(compressionQuality: 0.9) else { return }
 
-        profileImageData = data
-        if userProfile.profile != nil {
-            userProfile.profile?.avatarJPEGData = data
-        }
+        UserDefaults.standard.set(data, forKey: avatarKey(for: uid))
+        userProfile.profile?.avatarJPEGData = data
+        userProfile.objectWillChange.send()
+    }
+
+    private func loadNickname() -> String? {
+        guard let uid = currentUID() else { return nil }
+        return UserDefaults.standard.string(forKey: nicknameKey(for: uid))
     }
 }
 
-// MARK: - UIKit picker (стабильный способ)
+// MARK: - UIKit picker
 
 struct LegacyImagePicker: UIViewControllerRepresentable {
     @Environment(\.dismiss) private var dismiss

@@ -3,16 +3,38 @@ import SwiftUI
 
 @MainActor
 final class TaskViewModel: ObservableObject {
-    @Published var userProfile: UserProfileModel = UserProfileModel()
 
-    // Любое изменение массива — сразу сохраняем на диск
+    // ✅ настройка "за сколько минут напоминать"
+    @AppStorage("remindLeadMinutes") private var remindLeadMinutes: Int = 10
+
+    // Текущий пользователь
+    @Published private(set) var currentUserId: String? = nil
+
+    // Любое изменение массива — сохраняем на диск (но только если userId есть)
     @Published var tasks: [TaskModel] = [] {
-        didSet { saveToDisk() }
+        didSet { saveToDiskIfPossible() }
     }
 
-    // MARK: - Init
+    // ✅ Fallback id, чтобы уведомления работали даже без логина
+    private var effectiveUserId: String { currentUserId ?? "local" }
 
-    init() {
+    // MARK: - Init
+    init() {}
+
+    // MARK: - Bind user (ВАЖНО)
+
+    /// Вызывать при логине/логауте/смене аккаунта
+    func bindToUser(_ userId: String?) {
+        // 1) очистить UI сразу, чтобы не мигали старые данные
+        tasks = []
+
+        // 2) обновить current user
+        currentUserId = userId
+
+        // 3) если пользователь вышел
+        guard userId != nil else { return }
+
+        // 4) загрузить данные нового пользователя
         loadFromDisk()
     }
 
@@ -20,19 +42,26 @@ final class TaskViewModel: ObservableObject {
 
     func addTask(_ task: TaskModel) {
         tasks.append(task)
+        scheduleNotificationsIfNeeded(for: task)
     }
 
     func removeTask(_ task: TaskModel) {
         tasks.removeAll { $0.id == task.id }
+        cancelNotifications(for: task.id)
     }
 
     func toggleTaskCompletion(task: TaskModel) {
-        if let index = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[index].isCompleted.toggle()
+        guard let index = tasks.firstIndex(where: { $0.id == task.id }) else { return }
+
+        tasks[index].isCompleted.toggle()
+
+        if tasks[index].isCompleted {
+            cancelNotifications(for: task.id)
+        } else {
+            scheduleNotificationsIfNeeded(for: tasks[index])
         }
     }
 
-    // Перегруженный addTask
     func addTask(
         name: String,
         durationInMinutes: Int,
@@ -60,51 +89,135 @@ final class TaskViewModel: ObservableObject {
             startTime: startTime,
             endTime: endTime
         )
+
         tasks.append(newTask)
+        scheduleNotificationsIfNeeded(for: newTask)
     }
 
-    // Обновление задачи целиком
     func updateTask(_ task: TaskModel) {
-        if let idx = tasks.firstIndex(where: { $0.id == task.id }) {
-            tasks[idx] = task
-        }
-    }
+        guard let idx = tasks.firstIndex(where: { $0.id == task.id }) else { return }
 
-    // MARK: - 🔥 Новый код — обновление времени задачи
+        cancelNotifications(for: task.id)
+        tasks[idx] = task
+        scheduleNotificationsIfNeeded(for: task)
+    }
 
     func updateTaskTime(task: TaskModel, newDate: Date?, newStart: Date?, newEnd: Date?) {
         guard let index = tasks.firstIndex(where: { $0.id == task.id }) else { return }
 
-        // Обновляем поля только если значения переданы
-        if let d = newDate {
-            tasks[index].date = d
+        cancelNotifications(for: task.id)
+
+        if let d = newDate { tasks[index].date = d }
+        if let s = newStart { tasks[index].startTime = s }
+        if let e = newEnd { tasks[index].endTime = e }
+
+        scheduleNotificationsIfNeeded(for: tasks[index])
+    }
+
+    /// Пересоздать уведомления для всех задач (например при старте)
+    func rescheduleAllNotifications() {
+        let uid = effectiveUserId
+
+        Task {
+            for t in tasks {
+                NotificationScheduler.shared.cancelAll(for: t.id, userId: uid)
+
+                guard t.remindMe else { continue }
+                guard let startDate = startDateForNotifications(from: t) else { continue }
+
+                await NotificationScheduler.shared.scheduleOne(
+                    userId: uid,
+                    taskId: t.id,
+                    taskTitle: t.name,
+                    startDate: startDate,
+                    leadMinutes: remindLeadMinutes
+                )
+            }
         }
-        if let s = newStart {
-            tasks[index].startTime = s
+    }
+
+    // MARK: - Notifications helpers
+
+    private func scheduleNotificationsIfNeeded(for task: TaskModel) {
+        Task {
+            let uid = effectiveUserId
+
+            guard task.remindMe else { return }
+            guard !task.isCompleted else { return }
+            guard let startDate = startDateForNotifications(from: task) else { return }
+
+            await NotificationScheduler.shared.scheduleOne(
+                userId: uid,
+                taskId: task.id,
+                taskTitle: task.name,
+                startDate: startDate,
+                leadMinutes: remindLeadMinutes
+            )
         }
-        if let e = newEnd {
-            tasks[index].endTime = e
+    }
+
+    private func cancelNotifications(for taskId: UUID) {
+        let uid = effectiveUserId
+        NotificationScheduler.shared.cancelAll(for: taskId, userId: uid)
+    }
+
+    private func startDateForNotifications(from task: TaskModel) -> Date? {
+        if let start = task.startTime {
+            if let d = task.date {
+                return combine(date: d, time: start)
+            }
+            return start
         }
+        return task.date
+    }
+
+    private func combine(date: Date, time: Date) -> Date? {
+        let cal = Calendar.current
+        let d = cal.dateComponents([.year, .month, .day], from: date)
+        let t = cal.dateComponents([.hour, .minute], from: time)
+
+        var comps = DateComponents()
+        comps.year = d.year
+        comps.month = d.month
+        comps.day = d.day
+        comps.hour = t.hour
+        comps.minute = t.minute
+
+        return cal.date(from: comps)
     }
 
     // MARK: - Persistence
 
-    private var storeURL: URL {
-        let fm = FileManager.default
-        let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        // отдельная папка под ваше приложение
-        let dir = appSupport.appendingPathComponent(Bundle.main.bundleIdentifier ?? "TaskFlow", isDirectory: true)
-        if !fm.fileExists(atPath: dir.path) {
-            try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
-        }
-        return dir.appendingPathComponent("tasks.json")
+    private func userSafeId(_ id: String) -> String {
+        id.replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
     }
 
-    private func saveToDisk() {
+    private var storeURL: URL? {
+        guard let uid = currentUserId else { return nil }
+
+        let fm = FileManager.default
+        let appSupport = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+
+        let baseDir = appSupport.appendingPathComponent(
+            Bundle.main.bundleIdentifier ?? "TaskFlow",
+            isDirectory: true
+        )
+
+        if !fm.fileExists(atPath: baseDir.path) {
+            try? fm.createDirectory(at: baseDir, withIntermediateDirectories: true)
+        }
+
+        let filename = "tasks_\(userSafeId(uid)).json"
+        return baseDir.appendingPathComponent(filename)
+    }
+
+    private func saveToDiskIfPossible() {
+        guard let url = storeURL else { return }
         do {
             let enc = JSONEncoder()
             let data = try enc.encode(tasks)
-            try data.write(to: storeURL, options: [.atomic])
+            try data.write(to: url, options: [.atomic])
         } catch {
             #if DEBUG
             print("Save tasks error:", error)
@@ -113,12 +226,17 @@ final class TaskViewModel: ObservableObject {
     }
 
     private func loadFromDisk() {
+        guard let url = storeURL else {
+            tasks = []
+            return
+        }
+
         do {
-            let data = try Data(contentsOf: storeURL)
+            let data = try Data(contentsOf: url)
             let dec = JSONDecoder()
             tasks = try dec.decode([TaskModel].self, from: data)
         } catch {
-            tasks = [] // первый запуск или файла ещё нет
+            tasks = []
         }
     }
 }

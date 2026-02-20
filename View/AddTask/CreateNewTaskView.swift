@@ -196,6 +196,7 @@ struct CreateNewTaskView: View {
                 .background(isFormValid ? Color.blue : Color.gray.opacity(0.25))
                 .foregroundColor(.white)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
+            
         }
         .modifier(ShakeEffect(shakes: 1, animatableData: shakeTrigger))
         .padding(.horizontal)
@@ -208,6 +209,7 @@ struct CreateNewTaskView: View {
             withAnimation(.default) {
                 shakeTrigger += 1
                 showValidation = true
+                
             }
             if taskName.isEmpty {
                 flashTaskName = true
@@ -225,7 +227,7 @@ struct CreateNewTaskView: View {
             date: taskDate,
             isCompleted: false,
             category: "",
-            remindMe: false, // напоминания убрали в настройки
+            remindMe: true, // напоминания убрали в настройки
             comment: comment,
             project: projectViewModel.selectedProject?.title ?? "",
             startTime: startTime,

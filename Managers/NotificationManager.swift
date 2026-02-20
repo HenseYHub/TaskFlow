@@ -1,48 +1,68 @@
-//
-//  NotificationManager.swift
-//  TaskFlow
-//
-//  Created by Pavlo on 22.04.2025.
-//
-
 import Foundation
 import UserNotifications
+import UIKit
 
-class NotificationManager {
-    static let instance = NotificationManager()
+@MainActor
+final class NotificationManager: ObservableObject {
 
-    func requestAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
-            if granted {
-                print("✅ Notifications are allowed")
-            } else {
-                print("❌ Notifications are disabled")
+    enum AuthStatus {
+        case notDetermined
+        case denied
+        case authorized
+        case provisional
+        case ephemeral
+
+        var isEnabled: Bool {
+            switch self {
+            case .authorized, .provisional, .ephemeral:
+                return true
+            default:
+                return false
+            }
+        }
+
+        // optional: можно использовать в UI
+        var statusTextKey: String {
+            switch self {
+            case .notDetermined: return "notif_status_not_determined"
+            case .denied: return "notif_status_denied"
+            case .authorized: return "notif_status_authorized"
+            case .provisional: return "notif_status_provisional"
+            case .ephemeral: return "notif_status_ephemeral"
             }
         }
     }
 
-    func scheduleNotification(title: String, subtitle: String, date: Date) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.subtitle = subtitle
-        content.sound = .default
+    @Published private(set) var status: AuthStatus = .notDetermined
 
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: trigger
-        )
-
-        UNUserNotificationCenter.current().add(request)
+    func refreshStatus() async {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        switch settings.authorizationStatus {
+        case .notDetermined: status = .notDetermined
+        case .denied: status = .denied
+        case .authorized: status = .authorized
+        case .provisional: status = .provisional
+        case .ephemeral: status = .ephemeral
+        @unknown default:
+            status = .notDetermined
+        }
     }
 
-    func removeAll() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+    func requestAuthorization() async -> Bool {
+        do {
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(
+                options: [.alert, .badge, .sound]
+            )
+            await refreshStatus()
+            return granted
+        } catch {
+            await refreshStatus()
+            return false
+        }
+    }
+
+    func openAppSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
     }
 }
-

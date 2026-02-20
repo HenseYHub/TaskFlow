@@ -4,10 +4,12 @@ struct MainTabView: View {
     @State private var selectedTab = 0
     @State private var showCreateTask = false
 
+    @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var taskViewModel: TaskViewModel
     @EnvironmentObject var timerViewModel: TimerViewModel
     @EnvironmentObject var userProfile: UserProfileModel
     @EnvironmentObject var projectViewModel: ProjectViewModel
+    @EnvironmentObject var lang: LanguageController   // ✅ добавили
 
     init() {
         let appearance = UITabBarAppearance()
@@ -21,43 +23,59 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack {
+            
             AppColorPalette.background
                 .ignoresSafeArea(.all, edges: .all)
 
-            VStack(spacing: 0) {
-                Spacer()
+            TabView(selection: $selectedTab) {
 
-                TabView(selection: $selectedTab) {
-                    // HOME → DailyTimelineView
-                    NavigationStack {
-                        DailyTimelineView()
-                    }
-                    .tabItem { Label("Home", systemImage: "house") }
-                    .tag(0)
-
-            
-                    NavigationStack {
-                        FocusView()
-                    }
-                    .tabItem { Label("Focus", systemImage: "timer") }
-                    .tag(1)
-
-                    // Пустой таб для кнопки "+"
-                    Color.clear
-                        .tabItem { Image(systemName: "") }
-                        .tag(2)
-
-                    ProfileView()
-                        .tabItem { Label("Profile", systemImage: "person.crop.circle") }
-                        .tag(3)
-
-                    SettingsView()
-                        .tabItem { Label("Settings", systemImage: "gearshape") }
-                        .tag(4)
+                // HOME
+                NavigationStack {
+                    DailyTimelineView()
+                        .environmentObject(taskViewModel)
+                        .environmentObject(userProfile)
+                        .environmentObject(projectViewModel)
                 }
-            }
+                .tabItem { Label(LocalizedStringKey("tab_home"), systemImage: "house") }
+                .tag(0)
 
-            // Кнопка "+" по центру
+                // FOCUS
+                NavigationStack {
+                    FocusView()
+                        .environmentObject(timerViewModel)
+                }
+                .tabItem { Label(LocalizedStringKey("tab_focus"), systemImage: "timer") }
+                .tag(1)
+
+                // пустой таб под "+"
+                Color.clear
+                    .tabItem { Image(systemName: "") }
+                    .tag(2)
+
+                // PROFILE
+                NavigationStack {
+                    ProfileView()
+                        .environmentObject(taskViewModel)
+                        .environmentObject(authVM)
+                        .environmentObject(userProfile)
+                        .environmentObject(projectViewModel)
+                }
+                .tabItem { Label(LocalizedStringKey("tab_profile"), systemImage: "person.crop.circle") }
+                .tag(3)
+
+                // SETTINGS
+                NavigationStack {
+                    SettingsView()
+                        .environmentObject(lang) // ✅ SettingsView использует LanguageController
+                }
+                .tabItem { Label(LocalizedStringKey("tab_settings"), systemImage: "gearshape") }
+                .tag(4)
+            }
+            // ✅ вот это главное для твоей проблемы:
+            .environment(\.locale, lang.locale)   // форсим локаль на весь TabView
+            .id(lang.appLanguage)                 // пересоздаём TabView при смене языка
+
+            // центральная кнопка "+"
             VStack {
                 Spacer()
                 HStack {
@@ -68,6 +86,7 @@ struct MainTabView: View {
                                 .fill(Color.black)
                                 .frame(width: 64, height: 64)
                                 .shadow(color: Color.gray.opacity(0.6), radius: 4, x: 0, y: 2)
+
                             Image(systemName: "plus")
                                 .foregroundColor(.white)
                                 .font(.system(size: 28, weight: .bold))
@@ -86,14 +105,24 @@ struct MainTabView: View {
                 .environmentObject(userProfile)
                 .environmentObject(projectViewModel)
         }
+        .onAppear {
+            Task {
+                await NotificationScheduler.shared.hardTestIn15Seconds()
+            }
+        }
+
     }
+    
 }
+
 
 #Preview {
     MainTabView()
+        .environmentObject(AuthViewModel())
         .environmentObject(TaskViewModel())
         .environmentObject(TimerViewModel(durationInMinutes: 25))
         .environmentObject(UserProfileModel())
         .environmentObject(ProjectViewModel())
+        .environmentObject(LanguageController()) // ✅ важно для превью
         .environment(\.colorScheme, .dark)
 }
