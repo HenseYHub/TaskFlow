@@ -1,6 +1,5 @@
 # TaskFlow
-
-TaskFlow is a simple iOS productivity app built with SwiftUI.
+TaskFlow is a simple iOS productivity app focused on daily planning and focus sessions.
 
 ## Features
 
