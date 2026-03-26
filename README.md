@@ -23,7 +23,7 @@ TaskFlow is a simple iOS productivity app built with SwiftUI.
 ## Screenshots
 
 ![Home](screenshots/Home.jpeg)
-![Create](screenshots/Create_task.jpeg)
+![Create](screenshots/Create_Task.jpeg)
 ![Edit](screenshots/Edit.jpeg)
 ![Focus](screenshots/Focus.jpeg)
 ![Profile](screenshots/Profile.jpeg)
