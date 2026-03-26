@@ -38,7 +38,7 @@ struct ProfileView: View {
             .sheet(isPresented: $isEditingProfile) {
                 EditProfileSheet()
                     .environmentObject(userProfile)
-                    .environmentObject(authVM) // ✅ важно, если sheet использует authVM.userId
+                    .environmentObject(authVM)
                     .presentationDetents([.height(320)])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(.regularMaterial)
@@ -107,7 +107,7 @@ struct ProfileView: View {
     private func nameRoleView() -> some View {
         let nick = (loadNickname() ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // ✅ ВАЖНО: НЕ fallback на fullName, иначе будут "залипать" старые данные
+        
         let displayName = nick.isEmpty ? "—" : nick
 
         VStack(spacing: 4) {
@@ -191,15 +191,14 @@ struct ProfileView: View {
     private func nicknameKey(for uid: String) -> String { "profileNickname_\(uid)" }
 
     private func reloadForCurrentUser() {
-        // ✅ сбрасываем UI
         profileImage = nil
 
-        // ✅ создаём/сбрасываем профиль под текущий UID, чтобы не тянуть старые данные
+        
         if let uid = currentUID() {
             userProfile.profile = UserProfile(
                 id: uid,
-                fullName: "",      // если потом нужно — тоже сохраняй по uid
-                nickname: "",      // nickname берём из UserDefaults по uid
+                fullName: "",
+                nickname: "",      
                 profession: "",
                 email: "",
                 avatarJPEGData: nil

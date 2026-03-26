@@ -1,10 +1,3 @@
-//
-//  RoundedCorner.swift
-//  TaskFlow
-//
-//  Created by Pavlo on 24.04.2025.
-//
-
 import Foundation
 import SwiftUI
 

@@ -1,10 +1,3 @@
-//
-//  TabBarItem.swift
-//  TaskFlow
-//
-//  Created by Pavlo on 24.04.2025.
-//
-
 import SwiftUI
 
 struct TabBarItem: View {
@@ -24,7 +17,7 @@ struct TabBarItem: View {
                     .font(.caption2)
                     .foregroundColor(isSelected ? .white : .gray)
 
-                // Индикатор под активной вкладкой
+                
                 Rectangle()
                     .fill(isSelected ? Color.white : Color.clear)
                     .frame(height: 2)

@@ -29,7 +29,7 @@ struct ProgressHeatmapView: View {
         }.count
     }
 
-    // Аналогично для проектов
+    
     private var completedProjectsThisMonth: Int {
         let calendar = Calendar.current
         let start = calendar.startOfDay(for: monthStartDate)
@@ -66,7 +66,7 @@ struct ProgressHeatmapView: View {
         VStack(spacing: 32) {
             // MARK: Circle progress with two rings
             ZStack {
-                // Внешнее кольцо - проекты (больше радиус)
+               
                 Circle()
                     .stroke(Color.purple.opacity(0.2), lineWidth: 16)
 
@@ -83,7 +83,7 @@ struct ProgressHeatmapView: View {
                     )
                     .rotationEffect(.degrees(-90))
 
-                // Внутреннее кольцо - задачи (меньше радиус)
+                
                 Circle()
                     .stroke(Color.blue.opacity(0.2), lineWidth: 12)
                     .frame(width: circleSize - 20, height: circleSize - 20)
@@ -102,7 +102,7 @@ struct ProgressHeatmapView: View {
                     .frame(width: circleSize - 20, height: circleSize - 20)
                     .rotationEffect(.degrees(-20))
 
-                // Текст внутри круга — показать прогресс задач и проектов
+                
                 VStack(spacing: 6) {
                     Text("\(completedTasksThisMonth)")
                         .font(.system(size: 24, weight: .bold))
@@ -152,7 +152,7 @@ struct ProgressHeatmapView: View {
     }
 }
 
-// MARK: WeeklyBarChartView из твоего кода (без изменений)
+// MARK: WeeklyBarChartView
 struct WeeklyBarChartView: View {
     @EnvironmentObject var taskVM: TaskViewModel
     @State private var selectedWeekStart: Date = Calendar.current.startOfWeek(for: Date())
@@ -314,5 +314,5 @@ extension Calendar {
 #Preview {
     ProgressHeatmapView()
         .environmentObject(TaskViewModel())
-        .environmentObject(ProjectViewModel()) // Обязательно добавить
+        .environmentObject(ProjectViewModel())
 }

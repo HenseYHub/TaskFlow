@@ -1,6 +1,6 @@
 import Foundation
 
-struct ProjectModel: Identifiable {
+struct ProjectModel: Identifiable, Hashable, Codable {
     var id: UUID = UUID()
     var title: String
     var description: String
@@ -10,8 +10,16 @@ struct ProjectModel: Identifiable {
     var endTime: Date
     var isCompleted: Bool = false
 
-    // Инициализатор с поддержкой кастомного id
-    init(id: UUID = UUID(), title: String, description: String, comment: String, date: Date, startTime: Date, endTime: Date) {
+    init(
+        id: UUID = UUID(),
+        title: String,
+        description: String,
+        comment: String,
+        date: Date,
+        startTime: Date,
+        endTime: Date,
+        isCompleted: Bool = false
+    ) {
         self.id = id
         self.title = title
         self.description = description
@@ -19,8 +27,6 @@ struct ProjectModel: Identifiable {
         self.date = date
         self.startTime = startTime
         self.endTime = endTime
+        self.isCompleted = isCompleted
     }
 }
-
-
-

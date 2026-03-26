@@ -3,13 +3,13 @@ import UserNotifications
 
 enum TaskNotificationLead: String, CaseIterable {
     case min30 = "m30"
-    case min5  = "m5"
+    case min5 = "m5"
     case start = "start"
 
     var minutesBefore: Int {
         switch self {
         case .min30: return 30
-        case .min5:  return 5
+        case .min5: return 5
         case .start: return 0
         }
     }
@@ -17,7 +17,6 @@ enum TaskNotificationLead: String, CaseIterable {
 
 @MainActor
 final class NotificationScheduler {
-
     static let shared = NotificationScheduler()
     private init() {}
 
@@ -35,7 +34,9 @@ final class NotificationScheduler {
             do {
                 return try await center.requestAuthorization(options: [.alert, .badge, .sound])
             } catch {
-                print("❌ requestAuthorization error:", error)
+                #if DEBUG
+                print("requestAuthorization error:", error)
+                #endif
                 return false
             }
 
@@ -47,20 +48,23 @@ final class NotificationScheduler {
         }
     }
 
-    // MARK: - IDs
+    // MARK: - Identifiers
 
     func notificationId(userId: String, taskId: UUID, lead: TaskNotificationLead) -> String {
         "u_\(userId)_task_\(taskId.uuidString)_\(lead.rawValue)"
     }
 
     func cancelAll(for taskId: UUID, userId: String) {
-        let ids = TaskNotificationLead.allCases.map { notificationId(userId: userId, taskId: taskId, lead: $0) }
+        let ids = TaskNotificationLead.allCases.map {
+            notificationId(userId: userId, taskId: taskId, lead: $0)
+        }
+
         let center = UNUserNotificationCenter.current()
         center.removePendingNotificationRequests(withIdentifiers: ids)
         center.removeDeliveredNotifications(withIdentifiers: ids)
     }
 
-    // MARK: - Schedule ONE notification (за N минут)
+    // MARK: - Schedule one notification
 
     func scheduleOne(
         userId: String,
@@ -71,13 +75,14 @@ final class NotificationScheduler {
     ) async {
         let hasPermission = await ensurePermission()
         guard hasPermission else {
-            print("❌ Notifications: NO PERMISSION")
+            #if DEBUG
+            print("Notifications: no permission")
+            #endif
             return
         }
 
         let center = UNUserNotificationCenter.current()
 
-        // Удаляем старые уведомления этой задачи
         cancelAll(for: taskId, userId: userId)
 
         let fireDate = Calendar.current.date(byAdding: .minute, value: -leadMinutes, to: startDate) ?? startDate
@@ -89,7 +94,6 @@ final class NotificationScheduler {
         content.body = taskTitle
         content.sound = .default
 
-        // Если скоро — TimeInterval стабильнее
         let trigger: UNNotificationTrigger
         if delta < 3600 {
             trigger = UNTimeIntervalNotificationTrigger(timeInterval: delta, repeats: false)
@@ -107,34 +111,13 @@ final class NotificationScheduler {
 
         do {
             try await center.add(request)
-            print("✅ scheduled:", request.identifier)
+            #if DEBUG
+            print("Scheduled notification:", request.identifier)
+            #endif
         } catch {
-            print("❌ schedule error:", error.localizedDescription)
-        }
-    }
-
-    // MARK: - HARD TEST (можешь потом удалить)
-
-    func hardTestIn15Seconds() async {
-        print("🧪 HARD TEST START")
-        let hasPermission = await ensurePermission()
-        print("🧪 permission:", hasPermission)
-        guard hasPermission else { return }
-
-        let content = UNMutableNotificationContent()
-        content.title = "HARD TEST"
-        content.body = "If you see this — notifications WORK"
-        content.sound = .default
-
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 15, repeats: false)
-
-        do {
-            try await UNUserNotificationCenter.current().add(
-                UNNotificationRequest(identifier: "hard_test_15s", content: content, trigger: trigger)
-            )
-            print("✅ HARD TEST SCHEDULED")
-        } catch {
-            print("❌ HARD TEST ERROR:", error.localizedDescription)
+            #if DEBUG
+            print("Schedule error:", error.localizedDescription)
+            #endif
         }
     }
 }

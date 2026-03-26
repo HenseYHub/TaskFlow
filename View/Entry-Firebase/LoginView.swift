@@ -21,28 +21,36 @@ struct LoginView: View {
                 .offset(y: -350)
 
             VStack(spacing: 20) {
-                Text("Welcome to TaskFlow!")
+                Text(LocalizedStringKey("login_title"))
                     .foregroundColor(.white)
                     .font(.system(size: 30, weight: .bold, design: .rounded))
-                    .offset(x: 5, y: -180)
-                
-                Text("Login to your Account")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, -180)
+
+                Text(LocalizedStringKey("login_subtitle"))
                     .foregroundColor(.white)
                     .font(.system(size: 20, weight: .bold, design: .serif))
-                    .offset(x: -70, y: -40)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    .padding(.top, -40)
 
+                // Email
                 ZStack(alignment: .leading) {
                     if email.isEmpty {
-                        Text("Email")
+                        Text(LocalizedStringKey("login_email_placeholder"))
                             .foregroundColor(.white)
                             .padding(.leading, 16)
                             .frame(height: 44)
                     }
-                    
+
                     TextField("", text: $email)
                         .foregroundColor(.white)
                         .textInputAutocapitalization(.none)
                         .disableAutocorrection(true)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.username)
                         .padding(12)
                 }
                 .background(
@@ -50,34 +58,40 @@ struct LoginView: View {
                         .stroke(Color.white.opacity(0.8), lineWidth: 1)
                 )
 
+                // Password
                 ZStack(alignment: .leading) {
                     if password.isEmpty {
-                        Text("Password")
+                        Text(LocalizedStringKey("login_password_placeholder"))
                             .foregroundColor(.white)
                             .padding(.leading, 16)
                             .frame(height: 44)
                     }
-                    
+
                     HStack {
                         if showPassword {
                             TextField("", text: $password)
                                 .foregroundColor(.white)
                                 .textInputAutocapitalization(.none)
                                 .disableAutocorrection(true)
+                                .textContentType(.password)
                                 .padding(12)
                         } else {
                             SecureField("", text: $password)
                                 .foregroundColor(.white)
                                 .textInputAutocapitalization(.none)
                                 .disableAutocorrection(true)
+                                .textContentType(.password)
                                 .padding(12)
                         }
-                        
-                        Button(action: {
+
+                        Button {
                             showPassword.toggle()
-                        }) {
+                        } label: {
                             Image(systemName: showPassword ? "eye.slash" : "eye")
                                 .foregroundColor(.white.opacity(0.7))
+                                .accessibilityLabel(
+                                    LocalizedStringKey(showPassword ? "login_hide_password" : "login_show_password")
+                                )
                         }
                         .padding(.trailing, 8)
                     }
@@ -85,37 +99,48 @@ struct LoginView: View {
                 .background(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(Color.white.opacity(0.8), lineWidth: 1)
-                    )
-                
-                Button(action: {
+                )
+
+                // Forgot password
+                Button {
                     guard !email.isEmpty else {
-                        loginError = "Введите email для сброса пароля"
+                        loginError = String(localized: "login_reset_need_email",
+                                            defaultValue: "Enter email to reset password")
                         return
                     }
-                    
+
                     Auth.auth().sendPasswordReset(withEmail: email) { error in
                         if let error = error {
-                            loginError = "Ошибка: \(error.localizedDescription)"
+                            
+                            let format = String(localized: "login_error_format", defaultValue: "Error: %@")
+                            loginError = String(format: format, error.localizedDescription)
                         } else {
-                            loginError = "Письмо для сброса пароля отправлено на \(email)"
+                            
+                            let format = String(localized: "login_reset_sent_format",
+                                                defaultValue: "Reset email sent to %@")
+                            loginError = String(format: format, email)
                         }
-                        }
-                }) {
-                    Text("Forgot Password")
+                    }
+                } label: {
+                    Text(LocalizedStringKey("login_forgot_password"))
                         .foregroundColor(.blue)
                         .font(.footnote)
                         .padding(.top, 4)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
-                
+
+                // Log in
                 Button {
                     authVM.signIn(email: email, password: password) { success, errorMessage in
                         if !success {
-                            loginError = errorMessage
+                            // Если errorMessage уже локализованный — оставляем как есть.
+                            // Иначе можно сделать fallback ключом:
+                            loginError = errorMessage ?? String(localized: "login_unknown_error",
+                                                                defaultValue: "Something went wrong")
                         }
                     }
                 } label: {
-                    Text("Log In")
+                    Text(LocalizedStringKey("login_button"))
                         .bold()
                         .frame(width: 200, height: 40)
                         .background(
@@ -128,20 +153,20 @@ struct LoginView: View {
                 }
                 .padding(.top)
                 .offset(y: 50)
-                
+
                 if let error = loginError {
                     Text(error)
                         .foregroundColor(.red)
                         .padding(.top, -55)
                 }
-                
-                //SignUpView
+
+                // Sign up
                 HStack {
-                    Text("Don't have an account?")
+                    Text(LocalizedStringKey("login_no_account"))
                         .foregroundColor(.white)
-                    
+
                     NavigationLink(destination: SignUpView()) {
-                        Text("Sign In")
+                        Text(LocalizedStringKey("login_sign_up"))
                             .foregroundColor(.blue)
                             .bold()
                     }

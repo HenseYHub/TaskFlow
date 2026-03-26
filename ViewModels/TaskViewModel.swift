@@ -4,10 +4,10 @@ import SwiftUI
 @MainActor
 final class TaskViewModel: ObservableObject {
 
-    // ✅ настройка "за сколько минут напоминать"
+
     @AppStorage("remindLeadMinutes") private var remindLeadMinutes: Int = 10
 
-    // Текущий пользователь
+    
     @Published private(set) var currentUserId: String? = nil
 
     // Любое изменение массива — сохраняем на диск (но только если userId есть)
@@ -23,7 +23,6 @@ final class TaskViewModel: ObservableObject {
 
     // MARK: - Bind user (ВАЖНО)
 
-    /// Вызывать при логине/логауте/смене аккаунта
     func bindToUser(_ userId: String?) {
         // 1) очистить UI сразу, чтобы не мигали старые данные
         tasks = []
@@ -114,7 +113,6 @@ final class TaskViewModel: ObservableObject {
         scheduleNotificationsIfNeeded(for: tasks[index])
     }
 
-    /// Пересоздать уведомления для всех задач (например при старте)
     func rescheduleAllNotifications() {
         let uid = effectiveUserId
 

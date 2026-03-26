@@ -46,8 +46,8 @@ struct SignUpView: View {
                         }
 
                         TextField("", text: $email)
-                            .padding(12)
                             .foregroundColor(.white)
+                            .padding(12)
                             .frame(maxWidth: .infinity)
                             .textInputAutocapitalization(.none)
                             .disableAutocorrection(true)

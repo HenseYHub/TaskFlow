@@ -1,10 +1,3 @@
-//
-//  View+Placeholder.swift
-//  TaskFlow
-//
-//  Created by Pavlo on 04.08.2025.
-//
-
 import SwiftUI
 
 extension View {

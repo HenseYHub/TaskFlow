@@ -15,7 +15,6 @@ final class LanguageController: ObservableObject {
     }
 
     private func setLocale(_ code: String, persist: Bool = true) {
-        // ✅ синхронно — без сдвига на "прошлый" язык
         locale = Locale(identifier: code)
 
         if persist {

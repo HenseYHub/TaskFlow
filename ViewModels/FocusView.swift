@@ -1,7 +1,7 @@
 import SwiftUI
 import UserNotifications
 
-// MARK: - Таймер без Timer (устойчивый)
+// MARK: - Timer
 @MainActor
 final class FocusTimer: ObservableObject {
     @Published var isRunning: Bool = false
@@ -16,7 +16,7 @@ final class FocusTimer: ObservableObject {
         return Double(totalSeconds - secondsLeft) / Double(totalSeconds)
     }
 
-    /// Запуск фазы с возможностью стартовать с сохранённого остатка.
+    
     func start(minutes: Int, from secondsLeftOverride: Int? = nil) {
         stop()
         didFinish = false
@@ -72,7 +72,7 @@ final class FocusTimer: ObservableObject {
     }
 }
 
-// MARK: - Фазы
+// MARK: - Phase
 enum FocusPhase: String, CaseIterable {
     case focus
     case shortBreak
@@ -91,15 +91,15 @@ struct FocusView: View {
     @State private var phase: FocusPhase = .focus
     @State private var showingTaskPicker = false
 
-    // Остаток по фокус-фазе — теперь на КАЖДУЮ задачу отдельно
+    
     @State private var remainingFocusByTask: [UUID: Int] = [:]
     @State private var totalFocusByTask:     [UUID: Int] = [:]
 
-    // ✅ Остаток для фокуса БЕЗ выбранной задачи
+    
     @State private var remainingFocusNoTask: Int = 0
     @State private var totalFocusNoTask:     Int = 0
 
-    // Остатки для брейков — по фазе
+    
     @State private var remainingByPhase: [FocusPhase: Int] = [.shortBreak: 0, .longBreak: 0]
     @State private var totalByPhase:     [FocusPhase: Int] = [:]
 
@@ -139,7 +139,7 @@ struct FocusView: View {
 
     // MARK: - Localization helpers
 
-    /// Возвращает строку по ключу из таблицы "Localizable" именно для локали viewLocale.
+    
     private func localized(_ key: String) -> String {
         let lang = viewLocale.language.languageCode?.identifier
             ?? viewLocale.identifier.split(separator: "_").first.map(String.init)
@@ -152,9 +152,9 @@ struct FocusView: View {
         return NSLocalizedString(key, tableName: "Localizable", bundle: .main, comment: "")
     }
 
-    // Лейбл пресета — одна локализованная строка с плейсхолдером
+    
     private var focusPresetLabel: Text {
-        let format = localized("focus_preset_format") // "Focus • %d min" / "Fokus • %d Min" / "Фокус • %d хв"
+        let format = localized("focus_preset_format") // "Focus • %d min" / "Fokus • %d Min" /"
         let text = String(format: format, locale: viewLocale, focusMinutes)
         return Text(text)
     }
@@ -169,7 +169,7 @@ struct FocusView: View {
         }
     }
 
-    /// Сохраняем текущий прогресс активной фазы (учитывая выбранную задачу для focus)
+    
     private func saveCurrentProgress() {
         switch phase {
         case .focus:
@@ -177,7 +177,7 @@ struct FocusView: View {
                 remainingFocusByTask[id] = max(0, timer.secondsLeft)
                 totalFocusByTask[id]     = timer.totalSeconds
             } else {
-                // ✅ когда нет выбранной задачи — сохраняем сюда
+                
                 remainingFocusNoTask = max(0, timer.secondsLeft)
                 totalFocusNoTask     = timer.totalSeconds
             }
@@ -187,7 +187,7 @@ struct FocusView: View {
         }
     }
 
-    /// Загружаем состояние для заданной фазы и ставим на паузу
+    
     private func loadPhaseState(_ p: FocusPhase) {
         switch p {
         case .focus:
@@ -223,7 +223,7 @@ struct FocusView: View {
         }
     }
 
-    /// Переключение фазы: сохранить текущую, пауза, подставить сохранённое время новой фазы
+    
     private func switchPhase(to newPhase: FocusPhase) {
         saveCurrentProgress()
         phase = newPhase
@@ -258,26 +258,26 @@ struct FocusView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
-        // Не перезагружаем, если уже есть состояние
+        
         .onAppear {
             if !timer.isRunning && timer.totalSeconds == 0 && timer.secondsLeft == 0 {
                 loadPhaseState(phase)
             }
         }
-        // Сохраняем при уходе в фон
+        
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background {
                 saveCurrentProgress()
             }
         }
-        // Смена задачи: сохраняем старую (включая "без задачи"), ставим паузу, грузим состояние новой
+        
         .onChange(of: selectedTask, initial: false) { oldTask, _ in
             if phase == .focus {
                 if let oldId = oldTask?.id {
                     remainingFocusByTask[oldId] = max(0, timer.secondsLeft)
                     totalFocusByTask[oldId]     = timer.totalSeconds
                 } else {
-                    // ✅ раньше задачи не было
+                   
                     remainingFocusNoTask = max(0, timer.secondsLeft)
                     totalFocusNoTask     = timer.totalSeconds
                 }
@@ -301,14 +301,14 @@ struct FocusView: View {
                     remainingFocusByTask[id] = 0
                     totalFocusByTask[id]     = timer.totalSeconds
                 } else {
-                    // ✅ завершили фокус без задачи
+                    
                     remainingFocusNoTask = 0
                     totalFocusNoTask     = timer.totalSeconds
                 }
                 if let t = selectedTask {
                     taskVM.toggleTaskCompletion(task: t)
                 }
-                // Автопереключение на короткий перерыв (на паузе)
+                
                 switchPhase(to: .shortBreak)
 
             case .shortBreak, .longBreak:
@@ -431,13 +431,13 @@ struct FocusView: View {
                 // Start / Pause / Resume
                 Button {
                     if timer.isRunning {
-                        // Пауза
+                        // Pause
                         saveCurrentProgress()
                         timer.pause()
                         UIApplication.shared.isIdleTimerDisabled = false
                         cancelScheduledCompletion()
                     } else if isResumeState {
-                        // Резюмируем с сохранённого остатка
+                        
                         let total = defaultSeconds(for: phase)
                         let startFrom: Int
                         switch phase {
@@ -457,7 +457,7 @@ struct FocusView: View {
                         UIApplication.shared.isIdleTimerDisabled = true
                         scheduleCompletionNotification(in: startFrom)
                     } else {
-                        // Первый старт фазы
+                        
                         startSession()
                     }
                 } label: {
@@ -472,7 +472,7 @@ struct FocusView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
 
-                // Reset — только текущая фаза
+                // Reset
                 Button {
                     switch phase {
                     case .focus:
@@ -484,7 +484,7 @@ struct FocusView: View {
                     case .shortBreak, .longBreak:
                         remainingByPhase[phase] = 0
                     }
-                    loadPhaseState(phase) // вернёт на полный объём и паузу
+                    loadPhaseState(phase)
                     UIApplication.shared.isIdleTimerDisabled = false
                     cancelScheduledCompletion()
                 } label: {
@@ -573,8 +573,8 @@ private struct TaskPickerSheet: View {
                 }
             }
             .listStyle(.plain)
-            .scrollContentBackground(.hidden)                    // убираем системный белый фон
-            .background(AppColorPalette.background)              // фон списка
+            .scrollContentBackground(.hidden)
+            .background(AppColorPalette.background)
 
             .navigationTitle(Text("select_task_title"))
             .toolbar {
@@ -589,7 +589,7 @@ private struct TaskPickerSheet: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
         }
-        .background(AppColorPalette.background)                  // запасной фон
+        .background(AppColorPalette.background)
     }
 
     private func fmt(_ d: Date) -> String {
@@ -598,7 +598,7 @@ private struct TaskPickerSheet: View {
 }
 
 
-// MARK: - Уведомления
+// MARK: - Notification
 private func requestNotificationsIfNeeded() {
     UNUserNotificationCenter.current().getNotificationSettings { s in
         if s.authorizationStatus == .notDetermined {
@@ -622,7 +622,7 @@ private func cancelScheduledCompletion() {
     UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: ["focus-complete"])
 }
 
-// MARK: - Preview
+
 #Preview {
     FocusView()
         .environmentObject(TaskViewModel())

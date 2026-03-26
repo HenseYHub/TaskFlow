@@ -22,7 +22,7 @@ struct TaskFlowApp: App {
                     NavigationView { LoginView() }
                 }
             }
-            // НЕ ставим .id здесь
+            
             .environment(\.locale, lang.locale)
             .environmentObject(lang)
             .environmentObject(taskViewModel)

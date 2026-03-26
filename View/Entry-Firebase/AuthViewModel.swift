@@ -7,14 +7,14 @@ final class AuthViewModel: ObservableObject {
     @Published var isSignedIn = false
     @Published var isLoginMode = true
 
-    // ✅ важное
+    // important
     @Published var userId: String? = nil
 
     private let db = Firestore.firestore()
     private var authHandle: AuthStateDidChangeListenerHandle?
 
     init() {
-        // ✅ слушаем смену пользователя всегда
+        // listen for auth state changes
         authHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
             guard let self else { return }
             self.userId = user?.uid
@@ -23,20 +23,23 @@ final class AuthViewModel: ObservableObject {
     }
 
     deinit {
-        if let authHandle { Auth.auth().removeStateDidChangeListener(authHandle) }
+        if let authHandle {
+            Auth.auth().removeStateDidChangeListener(authHandle)
+        }
     }
 
-    // Вход
+    // MARK: - Sign In
+
     func signIn(email: String, password: String, completion: @escaping (Bool, String?) -> Void) {
         Auth.auth().signIn(withEmail: email, password: password) { [weak self] _, error in
             if let error = error {
-                print("Ошибка входа: \(error.localizedDescription)")
-                completion(false, "Неверный email или пароль")
+                print("Sign-in error: \(error.localizedDescription)")
+                completion(false, "Invalid email or password")
                 return
             }
 
             guard let user = Auth.auth().currentUser else {
-                completion(false, "Не удалось получить пользователя")
+                completion(false, "Failed to retrieve user")
                 return
             }
 
@@ -47,18 +50,18 @@ final class AuthViewModel: ObservableObject {
                     completion(true, nil)
                 }
             } else {
-                print("Email не подтвержден")
+                print("Email not verified")
                 try? Auth.auth().signOut()
                 DispatchQueue.main.async {
                     self?.isSignedIn = false
                     self?.userId = nil
                 }
-                completion(false, "Подтвердите email перед входом")
+                completion(false, "Please verify your email before signing in")
             }
         }
     }
    
-    // MARK: - Password reset
+    // MARK: - Password Reset
 
     func sendPasswordReset(completion: @escaping (Bool, String?) -> Void) {
         guard let email = Auth.auth().currentUser?.email, !email.isEmpty else {
@@ -76,12 +79,12 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Register
 
-    // Регистрация
     func register(email: String, password: String, completion: @escaping (Bool) -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { [weak self] result, error in
             if let error = error {
-                print("Ошибка регистрации: \(error.localizedDescription)")
+                print("Registration error: \(error.localizedDescription)")
                 completion(false)
                 return
             }
@@ -93,9 +96,9 @@ final class AuthViewModel: ObservableObject {
 
             user.sendEmailVerification { error in
                 if let error = error {
-                    print("Ошибка при отправке письма: \(error.localizedDescription)")
+                    print("Error sending verification email: \(error.localizedDescription)")
                 } else {
-                    print("Письмо отправлено на \(email)")
+                    print("Verification email sent to \(email)")
                 }
             }
 
@@ -105,13 +108,13 @@ final class AuthViewModel: ObservableObject {
                 "uid": user.uid
             ]) { error in
                 if let error = error {
-                    print("Ошибка сохранения данных: \(error.localizedDescription)")
+                    print("Error saving user data: \(error.localizedDescription)")
                 } else {
-                    print("Данные пользователя сохранены в Firestore")
+                    print("User data saved to Firestore")
                 }
             }
 
-            // Не входим
+            // Do not sign in automatically
             try? Auth.auth().signOut()
             DispatchQueue.main.async {
                 self?.isSignedIn = false
@@ -121,13 +124,15 @@ final class AuthViewModel: ObservableObject {
         }
     }
 
+    // MARK: - Sign Out
+
     func signOut() {
         do {
             try Auth.auth().signOut()
             self.isSignedIn = false
             self.userId = nil
         } catch {
-            print("Ошибка выхода: \(error.localizedDescription)")
+            print("Sign-out error: \(error.localizedDescription)")
         }
     }
 

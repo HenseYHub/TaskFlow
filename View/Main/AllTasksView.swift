@@ -89,9 +89,6 @@ struct AllTasksView: View {
         guard let index = taskVM.tasks.firstIndex(where: { $0.id == task.id }) else { return }
         taskVM.tasks[index].isCompleted.toggle()
 
-        // Если у тебя есть сохранение/синхронизация — вызови тут:
-        // taskVM.save()
-        // taskVM.updateTask(taskVM.tasks[index])
     }
 
     // MARK: - UI
@@ -177,7 +174,7 @@ struct TaskCardRow: View {
 
             Spacer()
 
-            // 🔥 стрелочку убрали, потому что сейчас она не открывает ничего
+            
         }
         .padding()
         .background(Color.white.opacity(0.05))

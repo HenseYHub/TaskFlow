@@ -19,7 +19,6 @@ struct DailyTimelineView: View {
     @State private var showDatePickerInline = false
     @State private var showCreateProjectView = false
     @State private var selectedDate: Date = Date()
-    @State private var selectedTaskID: UUID? = nil
 
     private var hasProjects: Bool { !projectViewModel.projects.isEmpty }
 
@@ -55,7 +54,7 @@ struct DailyTimelineView: View {
 
                     Spacer()
 
-                    // ✅ AVATAR from userProfile.profile (current account)
+                    // AVATAR from userProfile.profile (current account)
                     avatarView44
                 }
                 .padding(.horizontal)
@@ -179,7 +178,7 @@ struct DailyTimelineView: View {
                     .presentationBackground(AppColorPalette.background)
             }
         }
-        // ✅ если профиль изменился — перерисуем хедер точно
+        
         .id((userProfile.profile?.avatarJPEGData?.hashValue ?? 0) ^ (userProfile.profile?.nickname.hashValue ?? 0))
     }
 
@@ -223,7 +222,7 @@ struct DailyTimelineView: View {
 
     @ViewBuilder
     private func editPanel(task: TaskModel) -> some View {
-        // оставил как у тебя — без изменений
+        
         ScrollView(showsIndicators: false) {
             VStack(spacing: 16) {
                 Capsule()
@@ -553,10 +552,10 @@ extension TaskViewModel {
     let profile = UserProfileModel()
     profile.profile = UserProfile(
         id: "preview",
-        fullName: "Pasha",
-        nickname: "pavlo.dev",
-        profession: "iOS Dev",
-        email: "p@example.com",
+        fullName: "Demo User",
+        nickname: "taskflow_user",
+        profession: "Productivity Enthusiast",
+        email: "demo@example.com",
         avatarJPEGData: nil
     )
 

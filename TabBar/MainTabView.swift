@@ -9,7 +9,7 @@ struct MainTabView: View {
     @EnvironmentObject var timerViewModel: TimerViewModel
     @EnvironmentObject var userProfile: UserProfileModel
     @EnvironmentObject var projectViewModel: ProjectViewModel
-    @EnvironmentObject var lang: LanguageController   // ✅ добавили
+    @EnvironmentObject var lang: LanguageController   
 
     init() {
         let appearance = UITabBarAppearance()
@@ -47,7 +47,7 @@ struct MainTabView: View {
                 .tabItem { Label(LocalizedStringKey("tab_focus"), systemImage: "timer") }
                 .tag(1)
 
-                // пустой таб под "+"
+                
                 Color.clear
                     .tabItem { Image(systemName: "") }
                     .tag(2)
@@ -66,16 +66,16 @@ struct MainTabView: View {
                 // SETTINGS
                 NavigationStack {
                     SettingsView()
-                        .environmentObject(lang) // ✅ SettingsView использует LanguageController
+                        .environmentObject(lang) // SettingsView used  LanguageController
                 }
                 .tabItem { Label(LocalizedStringKey("tab_settings"), systemImage: "gearshape") }
                 .tag(4)
             }
-            // ✅ вот это главное для твоей проблемы:
-            .environment(\.locale, lang.locale)   // форсим локаль на весь TabView
-            .id(lang.appLanguage)                 // пересоздаём TabView при смене языка
+            
+            .environment(\.locale, lang.locale)
+            .id(lang.appLanguage)
 
-            // центральная кнопка "+"
+            // Center +
             VStack {
                 Spacer()
                 HStack {
@@ -105,11 +105,6 @@ struct MainTabView: View {
                 .environmentObject(userProfile)
                 .environmentObject(projectViewModel)
         }
-        .onAppear {
-            Task {
-                await NotificationScheduler.shared.hardTestIn15Seconds()
-            }
-        }
 
     }
     
@@ -123,6 +118,6 @@ struct MainTabView: View {
         .environmentObject(TimerViewModel(durationInMinutes: 25))
         .environmentObject(UserProfileModel())
         .environmentObject(ProjectViewModel())
-        .environmentObject(LanguageController()) // ✅ важно для превью
+        .environmentObject(LanguageController())
         .environment(\.colorScheme, .dark)
 }

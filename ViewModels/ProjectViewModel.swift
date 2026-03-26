@@ -1,9 +1,3 @@
-//
-//  ProjectViewModel.swift
-//  TaskFlow
-//
-//  Created by Pavlo on 25.04.2025.
-//
 
 import Foundation
 

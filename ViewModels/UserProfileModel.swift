@@ -2,7 +2,7 @@ import Foundation
 import UIKit
 import Combine
 
-// MARK: - Модель данных профиля
+// MARK: - Model Date Profile
 
 struct UserProfile: Identifiable, Codable {
     var id: String
@@ -10,10 +10,10 @@ struct UserProfile: Identifiable, Codable {
     var nickname: String
     var profession: String
     var email: String
-    var avatarJPEGData: Data?   // хранение аватара как Data (jpeg/png)
+    var avatarJPEGData: Data?
 }
 
-// MARK: - ViewModel профиля
+// MARK: - ViewModel
 
 final class UserProfileModel: ObservableObject {
     @Published var profile: UserProfile? {
@@ -24,22 +24,20 @@ final class UserProfileModel: ObservableObject {
 
     init() {
         load()
-        // Заполним дефолт, если профиля ещё нет
         if profile == nil {
             profile = UserProfile(
                 id: UUID().uuidString,
-                fullName: "Pavlo Brodiuk",
-                nickname: "pavlo.dev",
-                profession: "iOS Developer",
-                email: "pavlo.dev@example.com",
+                fullName: "Demo User",
+                nickname: "taskflow_user",
+                profession: "Productivity Enthusiast",
+                email: "demo@example.com",
                 avatarJPEGData: nil
             )
         }
     }
 
-    // MARK: - Утилиты
+    // MARK: - Utility
 
-    /// Текущее изображение аватара как UIImage (геттер/сеттер)
     var avatarImage: UIImage? {
         get {
             guard let data = profile?.avatarJPEGData else { return nil }
@@ -52,7 +50,7 @@ final class UserProfileModel: ObservableObject {
         }
     }
 
-    /// Удобный апдейтер (пример: update { $0.nickname = "new" })
+    
     func update(_ mutate: (inout UserProfile) -> Void) {
         guard var p = profile else { return }
         mutate(&p)

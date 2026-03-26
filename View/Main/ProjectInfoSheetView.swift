@@ -9,29 +9,24 @@ struct ProjectInfoSheetView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Drag indicator capsule
             Capsule()
                 .frame(width: 40, height: 5)
                 .foregroundColor(.white.opacity(0.4))
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 8)
 
-            // Title
             Text(title)
                 .font(.title2.bold())
                 .foregroundColor(.white)
 
-            // Description (if present)
             if !description.isEmpty {
                 Text(description)
                     .foregroundColor(.white)
             }
 
-            // Date
             Text("Date: \(formattedDate(date))")
                 .foregroundColor(.white.opacity(0.9))
 
-            // Time range
             Text("Time: \(formattedTime(startTime)) – \(formattedTime(endTime))")
                 .foregroundColor(.white.opacity(0.9))
 
@@ -60,8 +55,8 @@ struct ProjectInfoSheetView: View {
 
 #Preview {
     ProjectInfoSheetView(
-        title: "Study (Swift)",
-        description: "Learning SwiftUI",
+        title: "Demo Project",
+        description: "Project description",
         date: Date(),
         startTime: Date(),
         endTime: Calendar.current.date(byAdding: .minute, value: 60, to: Date()) ?? Date()

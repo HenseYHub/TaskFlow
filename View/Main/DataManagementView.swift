@@ -20,7 +20,7 @@ struct DataManagementView: View {
         .navigationTitle(LocalizedStringKey("settings_data_manage"))
         .alert(LocalizedStringKey("settings_data_delete_all_title"), isPresented: $showDeleteAllAlert) {
             Button(LocalizedStringKey("settings_data_delete_all_confirm"), role: .destructive) {
-                // TODO: тут удаление задач/проектов/кэша (когда будешь готов)
+                
             }
             Button(LocalizedStringKey("common_cancel"), role: .cancel) {}
         } message: {

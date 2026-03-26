@@ -4,7 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject private var lang: LanguageController
     @StateObject private var notificationManager = NotificationManager()
 
-    // ✅ 저장/настройка lead time (за сколько минут)
+    // Setting lead time
     @AppStorage("remindLeadMinutes") private var remindLeadMinutes: Int = 10
     private let leadOptions: [Int] = [0, 5, 10, 15, 30, 60]
 
@@ -35,7 +35,7 @@ struct SettingsView: View {
                     )
                 )
 
-                // ✅ Выбор времени напоминания
+                
                 Picker(LocalizedStringKey("settings_notifications_lead_time"), selection: $remindLeadMinutes) {
                     ForEach(leadOptions, id: \.self) { m in
                         Text(leadLabel(m)).tag(m)
@@ -147,7 +147,7 @@ struct SettingsView: View {
                 showNotifResultAlert = true
             }
         } else {
-            // iOS не дает программно выключить permissions — ведем в настройки
+            // iOS won't let you disable permissions programmatically—we'll go to Settings.
             showNotifDeniedAlert = true
         }
     }

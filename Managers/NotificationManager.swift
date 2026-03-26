@@ -21,7 +21,7 @@ final class NotificationManager: ObservableObject {
             }
         }
 
-        // optional: можно использовать в UI
+        // optional: can use in UI
         var statusTextKey: String {
             switch self {
             case .notDetermined: return "notif_status_not_determined"

@@ -5,26 +5,26 @@ struct CreateNewTaskView: View {
     @EnvironmentObject var projectViewModel: ProjectViewModel
     @Environment(\.dismiss) private var dismiss
 
-    // Поля
+    
     @State private var taskName: String = ""
     @State private var taskDate: Date = Date()
     @State private var startTime: Date = Date()
     @State private var endTime: Date = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
     @State private var comment: String = ""
 
-    // Валидация/анимации
+
     @State private var showValidation = false
     @State private var shakeTrigger: CGFloat = 0
     @State private var flashTaskName = false
 
-    // Быстрые пресеты длительности (минуты)
+
     private let durationPresets = [15, 30, 45, 60, 90, 120]
     @State private var selectedPreset: Int? = 60
 
-    // Валидация
+    
     var isFormValid: Bool { !taskName.isEmpty }
 
-    // Текущая длительность
+
     private var currentDurationMinutes: Int {
         max(1, Int(endTime.timeIntervalSince(startTime) / 60))
     }
@@ -49,7 +49,7 @@ struct CreateNewTaskView: View {
         .onChange(of: endTime) { _ in syncPresetWithManualTime() }
     }
 
-    // MARK: - Подвьюхи
+    // MARK: - View header
 
     private func headerView() -> some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -79,7 +79,7 @@ struct CreateNewTaskView: View {
 
     private func dateTimeView() -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Заголовок + текущая длительность
+            
             HStack {
                 Text("Date & Time")
                     .font(.caption)
@@ -90,7 +90,7 @@ struct CreateNewTaskView: View {
                     .foregroundColor(.gray)
             }
 
-            // Дата
+            // Date
             HStack {
                 DatePicker("", selection: $taskDate, in: Date()..., displayedComponents: .date)
                     .labelsHidden()
@@ -102,7 +102,7 @@ struct CreateNewTaskView: View {
 
             Divider().background(.gray.opacity(0.4))
 
-            // Время
+            // Time
             Text("Time")
                 .font(.caption)
                 .foregroundColor(.gray)
@@ -202,7 +202,7 @@ struct CreateNewTaskView: View {
         .padding(.horizontal)
     }
 
-    // MARK: - Логика
+    // MARK: - Logic
 
     private func createAction() {
         guard isFormValid else {
@@ -227,7 +227,7 @@ struct CreateNewTaskView: View {
             date: taskDate,
             isCompleted: false,
             category: "",
-            remindMe: true, // напоминания убрали в настройки
+            remindMe: true,
             comment: comment,
             project: projectViewModel.selectedProject?.title ?? "",
             startTime: startTime,
@@ -265,7 +265,7 @@ struct CreateNewTaskView: View {
     }
 
     private func syncPresetWithManualTime() {
-        // Если пользователь подвигал вручную endTime — подсветим пресет, если совпало.
+        
         let diff = max(1, Int(endTime.timeIntervalSince(startTime) / 60))
         if durationPresets.contains(diff) {
             selectedPreset = diff
@@ -275,7 +275,7 @@ struct CreateNewTaskView: View {
     }
 }
 
-// Анимация тряски
+
 struct ShakeEffect: GeometryEffect {
     var shakes: CGFloat = 0
     var animatableData: CGFloat

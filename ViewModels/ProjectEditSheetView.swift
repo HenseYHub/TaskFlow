@@ -8,7 +8,7 @@ struct ProjectEditSheetView: View {
     @Binding var date: Date
     @Binding var startTime: Date
     @Binding var endTime: Date
-    @Binding var isCompleted: Bool   // <-- добавлено
+    @Binding var isCompleted: Bool
     
     var projectIndex: Int
     
@@ -71,7 +71,7 @@ struct ProjectEditSheetView: View {
                     }
                 }
 
-                // Добавляем переключатель "Выполнено"
+                
                 Toggle(isOn: $isCompleted) {
                     Text("Completed")
                         .foregroundColor(.white)
@@ -82,7 +82,9 @@ struct ProjectEditSheetView: View {
 
                 Button(action: {
                     guard projectIndex < projectViewModel.projects.count else {
+                        #if DEBUG
                         print("Invalid project index!")
+                        #endif
                         return
                     }
 
@@ -93,7 +95,8 @@ struct ProjectEditSheetView: View {
                         comment: comment,
                         date: date,
                         startTime: startTime,
-                        endTime: endTime
+                        endTime: endTime,
+                        isCompleted: isCompleted
                     )
 
                     projectViewModel.updateProject(at: projectIndex, with: updatedProject)
@@ -122,9 +125,9 @@ struct ProjectEditSheetView: View {
 
 private struct ProjectEditSheetViewPreviewWrapper: View {
     @State private var isPresented = true
-    @State private var title = "Game Design"
-    @State private var description = "Create menu in dashboard & Make user flow"
-    @State private var comment = "Main project screen"
+    @State private var title = "Demo Project"
+    @State private var description = "Project description"
+    @State private var comment = "Additional notes"
     @State private var date = Date()
     @State private var startTime = Date()
     @State private var endTime = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()

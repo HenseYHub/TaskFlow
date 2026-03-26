@@ -4,7 +4,7 @@ import UIKit
 struct EditProfileSheet: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var userProfile: UserProfileModel
-    @EnvironmentObject var authVM: AuthViewModel   // ✅ нужен для UID + reset
+    @EnvironmentObject var authVM: AuthViewModel 
 
     // Drafts
     @State private var nickname: String = ""
@@ -21,7 +21,7 @@ struct EditProfileSheet: View {
             VStack(spacing: 16) {
                 headerBar
                 formCard
-                resetPasswordButton   // ✅ добавили кнопку
+                resetPasswordButton
                 Spacer(minLength: 8)
             }
             .background(AppColorPalette.background.ignoresSafeArea())
@@ -29,7 +29,7 @@ struct EditProfileSheet: View {
             .onChange(of: authVM.userId) { _, _ in
                 loadDraft()
             }
-            // ✅ алерт через LocalizedStringKey, чтобы не было StaticString ошибок
+            
             .alert(LocalizedStringKey(resetAlertTitleKey), isPresented: $showResetAlert) {
                 Button(LocalizedStringKey("ok")) { }
             } message: {
